@@ -1,0 +1,51 @@
+/**
+!/.gitignore
+
+#
+# Configuration.
+#
+!/src/sys/conf/files
+!/src/sys/conf/NOTES
+!/src/sys/conf/options
+
+#
+# Modifications targeting mx25l based flash/spi.
+#
+!/src/sys/dev/flash/mx25l.c
+
+#
+# MIPS platform specific.
+#
+!/src/sys/mips/conf/AR933X_BASE
+!/src/sys/mips/conf/AR933X_BASE.hints
+
+!/src/sys/mips/conf/TL-WR740Nv4
+!/src/sys/mips/conf/TL-WR740Nv4.hints
+
+#
+# Standalone kernel modules.
+#
+!/src/sys/modules/if_bridge/Makefile
+!/src/sys/modules/if_vether/Makefile
+
+#
+# Modifications on networking sub-system.
+#
+!/src/sys/net/if.h
+!/src/sys/net/if_bridge.c
+!/src/sys/net/if_bridgevar.h
+!/src/sys/net/if_vether.c
+
+#
+# Bsdbox. 
+#
+!/src/tools/bsdbox/Makefile
+!/src/tools/bsdbox/Makefile.base
+!/src/tools/bsdbox/Makefile.net
+!/src/tools/bsdbox/Makefile.login
+!/src/tools/bsdbox/Makefile.kld
+!/src/tools/bsdbox/Makefile.fs
+
+
+
+
