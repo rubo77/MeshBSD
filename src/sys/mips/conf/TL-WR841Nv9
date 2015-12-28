@@ -1,0 +1,25 @@
+#
+# TP-Link WR841N v9
+#
+# * QCA953X SoC
+# * 32MB RAM
+# * 4MB flash
+# * Integrated 1x1 2GHz wifi and 10/100 bridge
+#
+# $FreeBSD$
+#
+
+#NO_UNIVERSE
+
+# Include the default QCA953x parameters
+include         "QCA953X_BASE"
+
+ident           TL-WR841Nv9
+
+# Override hints with board values
+hints           "TL-WR841Nv9.hints"
+
+# Force the board memory - the base AP121 only has 16MB RAM
+options         AR71XX_REALMEM=(32*1024*1024)
+
+

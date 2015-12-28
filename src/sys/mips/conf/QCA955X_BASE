@@ -1,0 +1,23 @@
+#
+# QCA955X_BASE -- Kernel configuration base file for the Qualcomm Atheros
+# QCA955x SoC.
+#
+# This file (and the hints file accompanying it) are not designed to be
+# used by themselves. Instead, users of this file should create a kernel
+# config file which includes this file (which gets the basic hints), then
+# override the default options (adding devices as needed) and adding
+# hints as needed (for example, the GPIO and LAN PHY.)
+#
+# $FreeBSD: head/sys/mips/conf/QCA955X_BASE 284959 2015-06-30 17:00:45Z markm $
+#
+
+machine         mips mips
+ident		QCA955X_BASE
+cpu		CPU_MIPS74KC
+makeoptions	KERNLOADADDR=0x80050000
+options 	HZ=1000
+
+files		"../atheros/files.ar71xx"
+hints		"QCA955X_BASE.hints"
+
+include 	"MESH_BSD_BASE"

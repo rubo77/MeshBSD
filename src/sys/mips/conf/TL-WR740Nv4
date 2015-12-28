@@ -1,0 +1,24 @@
+#
+# TP-Link WR740N v4
+#
+# * AR9330 SoC
+# * 32MB RAM
+# * 4MB flash
+# * Integrated 1x1 2GHz wifi and 10/100 bridge
+#
+# $FreeBSD$
+#
+
+#NO_UNIVERSE
+
+# Include the default AR933x parameters
+include         "AR933X_BASE"
+
+ident           TL-WR740Nv4
+
+# Override hints with board values
+hints           "TL-WR740Nv4.hints"
+
+# Board memory - 32MB
+options         AR71XX_REALMEM=(32*1024*1024)
+

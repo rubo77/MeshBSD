@@ -1,0 +1,27 @@
+#
+# QCA953x -- Kernel configuration base file for the Qualcomm Atheros QCA953x SoC.
+#
+# This file (and the hints file accompanying it) are not designed to be
+# used by themselves. Instead, users of this file should create a kernel
+# config file which includes this file (which gets the basic hints), then
+# override the default options (adding devices as needed) and adding
+# hints as needed (for example, the GPIO and LAN PHY.)
+#
+# $FreeBSD: head/sys/mips/conf/QCA953X_BASE 291438 2015-11-29 05:49:49Z adrian $
+#
+
+machine 	mips mips
+ident		QCA953X_BASE
+cpu		CPU_MIPS4KC
+makeoptions	KERNLOADADDR=0x80050000
+options 	HZ=1000
+
+files		"../atheros/files.ar71xx"
+hints		"QCA953X_BASE.hints"
+
+# PMC
+options 	HWPMC_HOOKS
+device		hwpmc
+device		hwpmc_mips24k
+
+include 	"MESH_BSD_BASE"
