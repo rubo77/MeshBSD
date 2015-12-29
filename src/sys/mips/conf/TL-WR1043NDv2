@@ -1,0 +1,38 @@
+#
+# TP-Link TL-WR1043nd v2 - based on the AP135 reference design.
+#
+# This contains a QCA9558 MIPS74k SoC with on-board 3x3 2GHz wifi,
+# 64MiB RAM and an AR8327 5-port gigabit ethernet switch.
+#
+# $FreeBSD: head/sys/mips/conf/TL-WR1043NDv2 291049 2015-11-19 01:58:12Z imp $
+#
+
+#NO_UNIVERSE
+
+# Include the default QCA955x parameters
+include         "QCA955X_BASE"
+
+ident           TL-WR1043NDv2
+
+# Override hints with board values
+hints           "TL-WR1043NDv2.hints"
+
+options         AR71XX_REALMEM=(64*1024*1024)
+
+# read MSDOS formatted disks - USB
+options 	MSDOSFS
+
+# Enable the uboot environment stuff rather then the
+# redboot stuff.
+options 	AR71XX_ENV_UBOOT
+
+# yes, this board has a PCI connected atheros device
+#device		ath_pci
+#options 	AR71XX_ATH_EEPROM
+#device		firmware		# Used by the above
+#options 	ATH_EEPROM_FIRMWARE
+
+options 	NETGRAPH
+options 	NETGRAPH_SOCKET
+options 	NETGRAPH_ETHER
+options 	NETGRAPH_PPPOE
