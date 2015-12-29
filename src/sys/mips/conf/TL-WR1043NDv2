@@ -27,10 +27,10 @@ options 	MSDOSFS
 options 	AR71XX_ENV_UBOOT
 
 # yes, this board has a PCI connected atheros device
-#device		ath_pci
-#options 	AR71XX_ATH_EEPROM
-#device		firmware		# Used by the above
-#options 	ATH_EEPROM_FIRMWARE
+device		ath_pci
+options 	AR71XX_ATH_EEPROM
+device		firmware		# Used by the above
+options 	ATH_EEPROM_FIRMWARE
 
 options 	NETGRAPH
 options 	NETGRAPH_SOCKET
