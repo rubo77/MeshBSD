@@ -58,7 +58,7 @@ int warnings_occurred;
  * Log an error message, then exit.
  */
 void
-error(char *fmt, ...)
+error(const char *fmt, ...)
 {
 	va_list list;
 
@@ -96,7 +96,7 @@ error(char *fmt, ...)
  * Log a warning message...
  */
 int
-warning(char *fmt, ...)
+warning(const char *fmt, ...)
 {
 	va_list list;
 
@@ -123,7 +123,7 @@ warning(char *fmt, ...)
  * Log a note...
  */
 int
-note(char *fmt, ...)
+note(const char *fmt, ...)
 {
 	va_list list;
 
@@ -150,7 +150,7 @@ note(char *fmt, ...)
  * Log a debug message...
  */
 int
-debug(char *fmt, ...)
+debug(const char *fmt, ...)
 {
 	va_list list;
 
@@ -212,7 +212,7 @@ do_percentm(char *obuf, size_t size, char *ibuf)
 }
 
 int
-parse_warn(char *fmt, ...)
+parse_warn(const char *fmt, ...)
 {
 	va_list list;
 	static char spaces[] =

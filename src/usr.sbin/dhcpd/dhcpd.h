@@ -474,6 +474,9 @@ typedef unsigned char option_mask[16];
 
 /* External definitions... */
 
+/* reallocarray.c */
+void *reallocarray(void *, size_t, size_t);
+
 /* options.c */
 void	 parse_options(struct packet *);
 void	 parse_option_buffer(struct packet *, unsigned char *, int);
@@ -485,11 +488,11 @@ void	 do_packet(struct interface_info *, struct dhcp_packet *, int,
 
 /* errwarn.c */
 extern int warnings_occurred;
-void	error(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int	warning(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int	note(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int	debug(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int	parse_warn(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+void	error(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+int	warning(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+int	note(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+int	debug(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+int	parse_warn(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* dhcpd.c */
 extern time_t		cur_time;
@@ -692,7 +695,7 @@ int icmp_echorequest(struct iaddr *);
 void icmp_echoreply(struct protocol *);
 
 /* pfutils.c */
-__dead void pftable_handler(void);
+void pftable_handler(void);
 void pf_change_table(int, int, struct in_addr, char *);
 void pf_kill_state(int, struct in_addr);
 size_t atomicio(ssize_t (*)(int, void *, size_t), int, void *, size_t);
