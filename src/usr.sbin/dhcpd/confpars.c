@@ -1037,7 +1037,7 @@ void parse_option_param(cfile, group)
 		   like that. */
 		int uniform = option->format[1] == 'A';
 
-		for (fmt = option->format; *fmt; fmt++) {
+		for (fmt = (char *)option->format; *fmt; fmt++) {
 			if (*fmt == 'A')
 				break;
 			switch (*fmt) {

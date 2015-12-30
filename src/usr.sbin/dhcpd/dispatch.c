@@ -68,7 +68,7 @@ discover_interfaces(int *rdomain)
 	struct interface_info *last, *next;
 	struct subnet *subnet;
 	struct shared_network *share;
-	struct sockaddr_in foo;
+	struct sockaddr_in sin;
 	int ir = 0, ird;
 	struct ifreq *tif;
 	struct ifaddrs *ifap, *ifa;
@@ -134,21 +134,20 @@ discover_interfaces(int *rdomain)
 		/* If we have the capability, extract link information
 		   and record it in a linked list. */
 		if (ifa->ifa_addr->sa_family == AF_LINK) {
-			struct sockaddr_dl *foo =
-			    ((struct sockaddr_dl *)(ifa->ifa_addr));
-			tmp->index = foo->sdl_index;
-			tmp->hw_address.hlen = foo->sdl_alen;
+			struct sockaddr_dl *sdl = (void *)ifa->ifa_addr;
+			tmp->index = sdl->sdl_index;
+			tmp->hw_address.hlen = sdl->sdl_alen;
 			tmp->hw_address.htype = HTYPE_ETHER; /* XXX */
 			memcpy(tmp->hw_address.haddr,
-			    LLADDR(foo), foo->sdl_alen);
+			    LLADDR(sdl), sdl->sdl_alen);
 		} else if (ifa->ifa_addr->sa_family == AF_INET) {
 			struct iaddr addr;
 
 			/* Get a pointer to the address... */
-			memcpy(&foo, ifa->ifa_addr, sizeof(foo));
+			memcpy(&sin, ifa->ifa_addr, sizeof(sin));
 
 			/* We don't want the loopback interface. */
-			if (foo.sin_addr.s_addr == htonl (INADDR_LOOPBACK))
+			if (sin.sin_addr.s_addr == htonl (INADDR_LOOPBACK))
 				continue;
 
 			/* If this is the first real IP address we've
@@ -163,12 +162,12 @@ discover_interfaces(int *rdomain)
 				memcpy(&tif->ifr_addr, ifa->ifa_addr,
 				    ifa->ifa_addr->sa_len);
 				tmp->ifp = tif;
-				tmp->primary_address = foo.sin_addr;
+				tmp->primary_address = sin.sin_addr;
 			}
 
 			/* Grab the address... */
 			addr.len = 4;
-			memcpy(addr.iabuf, &foo.sin_addr.s_addr, addr.len);
+			memcpy(addr.iabuf, &sin.sin_addr.s_addr, addr.len);
 
 			/* If there's a registered subnet for this address,
 			   connect it together... */
@@ -225,12 +224,12 @@ discover_interfaces(int *rdomain)
 			continue;
 		}
 
-		memcpy(&foo, &tmp->ifp->ifr_addr, sizeof tmp->ifp->ifr_addr);
+		memcpy(&sin, &tmp->ifp->ifr_addr, sizeof tmp->ifp->ifr_addr);
 
 		if (!tmp->shared_network) {
 			warning("Can't listen on %s - dhcpd.conf has no subnet "
 			    "declaration for %s.", tmp->name,
-			    inet_ntoa(foo.sin_addr));
+			    inet_ntoa(sin.sin_addr));
 			/* Remove tmp from the list of interfaces. */
 			if (!last)
 				interfaces = interfaces->next;
@@ -251,7 +250,7 @@ discover_interfaces(int *rdomain)
 				 */
 				subnet->interface_address.len = 4;
 				memcpy(subnet->interface_address.iabuf,
-				    &foo.sin_addr.s_addr, 4);
+				    &sin.sin_addr.s_addr, 4);
 			}
 		}
 
@@ -259,7 +258,7 @@ discover_interfaces(int *rdomain)
 		if_register_receive(tmp);
 		if_register_send(tmp);
 		note("Listening on %s (%s).", tmp->name,
-		    inet_ntoa(foo.sin_addr));
+		    inet_ntoa(sin.sin_addr));
 	}
 
 	if (interfaces == NULL)

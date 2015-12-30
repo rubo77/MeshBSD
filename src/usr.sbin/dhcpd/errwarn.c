@@ -47,7 +47,7 @@
 
 #include "dhcpd.h"
 
-static void do_percentm(char *obuf, size_t size, char *ibuf);
+static void do_percentm(char *obuf, size_t size, const char *ibuf);
 
 static char mbuf[1024];
 static char fbuf[1024];
@@ -157,13 +157,13 @@ debug(const char *fmt, ...)
  * Find %m in the input string and substitute an error message string.
  */
 static void
-do_percentm(char *obuf, size_t size, char *ibuf)
+do_percentm(char *obuf, size_t size, const char *ibuf)
 {
 	char ch;
-	char *s = ibuf;
+	char *s = (char *)ibuf;
 	char *t = obuf;
-	size_t prlen;
-	size_t fmt_left;
+	int prlen;
+	int fmt_left;
 	int saved_errno = errno;
 
 	/*
@@ -210,17 +210,17 @@ parse_warn(const char *fmt, ...)
 	if (log_perror) {
 		iov[0].iov_base = mbuf;
 		iov[0].iov_len = strlen(mbuf);
-		iov[1].iov_base = "\n";
+		iov[1].iov_base = (void *)"\n";
 		iov[1].iov_len = 1;
 		iov[2].iov_base = token_line;
 		iov[2].iov_len = strlen(token_line);
-		iov[3].iov_base = "\n";
+		iov[3].iov_base = (void *)"\n";
 		iov[3].iov_len = 1;
 		iovcnt = 4;
 		if (lexchar < 81) {
 			iov[4].iov_base = spaces;
 			iov[4].iov_len = lexchar - 1;
-			iov[5].iov_base = "^\n";
+			iov[5].iov_base = (void *)"^\n";
 			iov[5].iov_len = 2;
 			iovcnt += 2;
 		}

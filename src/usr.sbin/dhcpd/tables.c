@@ -417,7 +417,7 @@ unsigned char dhcp_option_default_priority_list[256] = {
 	250, 251, 252, 253, 254
 };
 
-char *hardware_types[] = {
+const char *hardware_types[] = {
 	"unknown-0",
 	"ethernet",
 	"unknown-2",

@@ -124,16 +124,16 @@ enter_host(struct host_decl *hd)
 }
 
 struct host_decl *
-find_hosts_by_haddr(int htype, unsigned char *haddr, int hlen)
+find_hosts_by_haddr(int htype __unused, unsigned char *haddr, int hlen)
 {
-	return (struct host_decl *)hash_lookup(host_hw_addr_hash,
-	    haddr, hlen);
+	return ((struct host_decl *)hash_lookup(host_hw_addr_hash,
+	    haddr, hlen));
 }
 
 struct host_decl *
 find_hosts_by_uid(unsigned char *data, int len)
 {
-	return (struct host_decl *)hash_lookup(host_uid_hash, data, len);
+	return ((struct host_decl *)hash_lookup(host_uid_hash, data, len));
 }
 
 /*
@@ -152,7 +152,7 @@ find_host_for_network(struct host_decl **host, struct iaddr *addr,
 	struct subnet *subnet;
 	struct iaddr ip_address;
 	struct host_decl *hp;
-	int i;
+	size_t i;
 
 	for (hp = *host; hp; hp = hp->n_ipaddr) {
 		if (!hp->fixed_addr || !tree_evaluate(hp->fixed_addr))
@@ -164,11 +164,11 @@ find_host_for_network(struct host_decl **host, struct iaddr *addr,
 			if (subnet) {
 				*addr = ip_address;
 				*host = hp;
-				return subnet;
+				return (subnet);
 			}
 		}
 	}
-	return NULL;
+	return (NULL);
 }
 
 void
@@ -311,9 +311,9 @@ find_subnet(struct iaddr addr)
 
 	for (rv = subnets; rv; rv = rv->next_subnet) {
 		if (addr_eq(subnet_number(addr, rv->netmask), rv->net))
-			return rv;
+			return (rv);
 	}
-	return NULL;
+	return (NULL);
 }
 
 struct subnet *
@@ -323,9 +323,9 @@ find_grouped_subnet(struct shared_network *share, struct iaddr addr)
 
 	for (rv = share->subnets; rv; rv = rv->next_sibling) {
 		if (addr_eq(subnet_number(addr, rv->netmask), rv->net))
-			return rv;
+			return (rv);
 	}
-	return NULL;
+	return (NULL);
 }
 
 int
@@ -350,9 +350,9 @@ subnet_inner_than(struct subnet *subnet, struct subnet *scan, int warnp)
 			    "Warning: ", n1buf, 32 - i,
 			    piaddr(scan->net), 32 - j);
 		if (i < j)
-			return 1;
+			return (1);
 	}
-	return 0;
+	return (0);
 }
 
 /* Enter a new subnet into the subnet list. */
@@ -440,8 +440,8 @@ static inline int
 uid_or_hwaddr_cmp(struct lease *a, struct lease *b)
 {
 	if (a->uid && b->uid)
-		return uidcmp(a, b);
-	return hwaddrcmp(&a->hardware_addr, &b->hardware_addr);
+		return (uidcmp(a, b));
+	return (hwaddrcmp(&a->hardware_addr, &b->hardware_addr));
 }
 
 /*
@@ -460,7 +460,7 @@ supersede_lease(struct lease *comp, struct lease *lease, int commit)
 
 	/* Static leases are not currently kept in the database... */
 	if (lease->flags & STATIC_LEASE)
-		return 1;
+		return (1);
 
 	/*
 	 * If the existing lease hasn't expired and has a different
@@ -475,7 +475,7 @@ supersede_lease(struct lease *comp, struct lease *lease, int commit)
 	if (!(lease->flags & ABANDONED_LEASE) &&
 	    comp->ends > cur_time && uid_or_hwaddr_cmp(comp, lease)) {
 		warning("Lease conflict at %s", piaddr(comp->ip_addr));
-		return 0;
+		return (0);
 	} else {
 		/* If there's a Unique ID, dissociate it from the hash
 		   table and free it if necessary. */
@@ -610,7 +610,7 @@ supersede_lease(struct lease *comp, struct lease *lease, int commit)
 
 	/* Return zero if we didn't commit the lease to permanent storage;
 	   nonzero if we did. */
-	return commit && write_lease(comp) && commit_leases();
+	return (commit && write_lease(comp) && commit_leases());
 }
 
 /* Release the specified lease and re-hash it as appropriate. */
@@ -655,26 +655,27 @@ abandon_lease(struct lease *lease, const char *message)
 	supersede_lease(lease, &lt, 1);
 
 	pfmsg('A', lease); /* address is abandoned. send to purgatory */
-	return;
+
 }
 
 /* Locate the lease associated with a given IP address... */
 struct lease *
 find_lease_by_ip_addr(struct iaddr addr)
 {
-	return (struct lease *)hash_lookup(lease_ip_addr_hash,
-	    addr.iabuf, addr.len);
+	return ((struct lease *)hash_lookup(lease_ip_addr_hash,
+	    addr.iabuf, addr.len));
 }
 
 struct lease *find_lease_by_uid(unsigned char *uid, int len)
 {
-	return (struct lease *)hash_lookup(lease_uid_hash, uid, len);
+	return ((struct lease *)hash_lookup(lease_uid_hash, uid, len));
 }
 
 struct lease *
 find_lease_by_hw_addr(unsigned char *hwaddr, int hwlen)
 {
-	return (struct lease *)hash_lookup(lease_hw_addr_hash, hwaddr, hwlen);
+	return ((struct lease *)hash_lookup(lease_hw_addr_hash, 
+		hwaddr, hwlen));
 }
 
 /* Add the specified lease to the uid hash. */
@@ -704,10 +705,8 @@ uid_hash_delete(struct lease *lease)
 	struct lease *scan;
 
 	/* If it's not in the hash, we have no work to do. */
-	if (!head) {
-		lease->n_uid = NULL;
-		return;
-	}
+	if (!head) 
+		goto out;
 
 	/* If the lease we're freeing is at the head of the list,
 	   remove the hash table entry and add a new one with the
@@ -729,6 +728,7 @@ uid_hash_delete(struct lease *lease)
 			}
 		}
 	}
+out:	
 	lease->n_uid = NULL;
 }
 
@@ -761,10 +761,8 @@ hw_hash_delete(struct lease *lease)
 	struct lease *scan;
 
 	/* If it's not in the hash, we have no work to do. */
-	if (!head) {
-		lease->n_hw = NULL;
-		return;
-	}
+	if (!head) 
+		goto out;
 
 	/* If the lease we're freeing is at the head of the list,
 	   remove the hash table entry and add a new one with the
@@ -790,6 +788,7 @@ hw_hash_delete(struct lease *lease)
 			}
 		}
 	}
+out:	
 	lease->n_hw = NULL;
 }
 
@@ -797,10 +796,10 @@ hw_hash_delete(struct lease *lease)
 struct class *
 add_class(int type, char *name)
 {
-	struct class *class;
+	struct class *cls;
 	char *tname;
 
-	class = calloc(1, sizeof(*class));
+	cls = calloc(1, sizeof(*cls));
 	tname = strdup(name);
 
 	if (!vendor_class_hash)
@@ -808,30 +807,34 @@ add_class(int type, char *name)
 	if (!user_class_hash)
 		user_class_hash = new_hash();
 
-	if (!tname || !class || !vendor_class_hash || !user_class_hash) {
-		warning("No memory for %s.", name);
-		free(class);
-		free(tname);
-		return NULL;
-	}
+	if (!tname || !cls || !vendor_class_hash || !user_class_hash) 
+		goto bad;
 
-	class->name = tname;
+	cls->name = tname;
 
 	if (type)
 		add_hash(user_class_hash, (unsigned char *)tname,
-		    strlen(tname), (unsigned char *)class);
+		    strlen(tname), (unsigned char *)cls);
 	else
 		add_hash(vendor_class_hash, (unsigned char *)tname,
-		    strlen(tname), (unsigned char *)class);
+		    strlen(tname), (unsigned char *)cls);
 
-	return class;
+out:
+	return (cls);
+bad:
+	warning("No memory for %s.", name);
+	free(cls);
+	free(tname);
+	tname = NULL;
+	cls = NULL;
+	goto out;
 }
 
 struct class *
 find_class(int type, unsigned char *name, int len)
 {
-	return (struct class *)hash_lookup(type ? user_class_hash :
-	    vendor_class_hash, name, len);
+	return ((struct class *)hash_lookup(type ? user_class_hash :
+	    vendor_class_hash, name, len));
 }
 
 struct group *

@@ -55,7 +55,7 @@ int eol_token;
 
 static char line1[81];
 static char line2[81];
-static int lpos;
+static unsigned int lpos;
 static int line;
 static int tlpos;
 static int tline;
@@ -212,7 +212,8 @@ skip_to_eol(FILE *cfile)
 static int
 read_string(FILE *cfile)
 {
-	int i, c, bs;
+	unsigned int i, bs;
+	int c;
 
 	bs = i = 0;
 	do {
@@ -241,7 +242,8 @@ read_string(FILE *cfile)
 static int
 read_num_or_name(int c, FILE *cfile)
 {
-	int i, rv, xdigits;
+	unsigned int i, xdigits;
+	int rv;
 
 	xdigits = isxdigit(c) ? 1 : 0;
 

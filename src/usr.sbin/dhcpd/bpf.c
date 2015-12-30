@@ -44,7 +44,6 @@
 #include <sys/ioctl.h>
 #include <sys/uio.h>
 
-#include <net/bpf.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <netinet/if_ether.h>

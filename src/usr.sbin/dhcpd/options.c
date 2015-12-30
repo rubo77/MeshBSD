@@ -263,7 +263,9 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 {
 	unsigned char priority_list[256];
 	unsigned char buffer[4096];	/* Really big buffer... */
-	int bufix, main_buffer_size, option_size;
+	size_t main_buffer_size;
+	size_t option_size;
+	int bufix;
 
 	/*
 	 * If the client has provided a maximum DHCP message size, use

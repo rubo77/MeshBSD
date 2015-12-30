@@ -100,8 +100,8 @@ struct universe {
 };
 
 struct option {
-	char		*name;
-	char		*format;
+	const char		*name;
+	const char		*format;
 	struct universe	*universe;
 	unsigned char	code;
 };

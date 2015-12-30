@@ -199,7 +199,8 @@ void
 parse_hardware_param(FILE *cfile, struct hardware *hardware)
 {
 	char *val;
-	int token, hlen;
+	int token;
+	size_t hlen;
 	unsigned char *t;
 
 	token = next_token(&val, cfile);
@@ -252,7 +253,7 @@ parse_hardware_param(FILE *cfile, struct hardware *hardware)
  * lease-time :== NUMBER SEMI
  */
 void
-parse_lease_time(FILE *cfile, time_t *timep)
+parse_lease_time(FILE *cfile, time_t *timep __unused)
 {
 	const char *errstr;
 	char *val;
@@ -359,8 +360,7 @@ parse_numeric_aggregate(FILE *cfile, unsigned char *buf, int *max,
 void
 convert_num(unsigned char *buf, char *str, int base, int size)
 {
-	int negative = 0, tval, max;
-	u_int32_t val = 0;
+	int negative = 0, tval, max, val = 0;
 	char *ptr = str;
 
 	if (*ptr == '-') {

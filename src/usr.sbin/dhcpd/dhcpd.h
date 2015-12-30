@@ -48,6 +48,7 @@
 #include <net/if.h>
 #include <net/if_dl.h>
 #include <net/route.h>
+#include <net/bpf.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -478,6 +479,9 @@ typedef unsigned char option_mask[16];
 void *reallocarray(void *, size_t, size_t);
 
 /* options.c */
+extern int bad_options;
+extern int bad_options_max;
+
 void	 parse_options(struct packet *);
 void	 parse_option_buffer(struct packet *, unsigned char *, int);
 int	 cons_options(struct packet *, struct dhcp_packet *, int,
@@ -532,9 +536,15 @@ extern char	 comments[4096];
 extern int	 comment_index;
 extern int	 eol_token;
 
+extern char *prev_line;
+extern char *cur_line;
+
 void	new_parse(char *);
 int	next_token(char **, FILE *);
 int	peek_token(char **, FILE *);
+
+int 	kw_cmp(const void *, const void *);
+
 
 /* confpars.c */
 int	 readconf(void);
@@ -597,6 +607,8 @@ struct lease *mockup_lease(struct packet *, struct shared_network *,
 void bootp(struct packet *);
 
 /* memory.c */
+extern struct subnet *subnets;
+
 void enter_host(struct host_decl *);
 struct host_decl *find_hosts_by_haddr(int, unsigned char *, int);
 struct host_decl *find_hosts_by_uid(unsigned char *, int);
@@ -626,6 +638,9 @@ struct group *clone_group(struct group *, const char *);
 void write_leases(void);
 
 /* alloc.c */
+extern struct lease_state *free_lease_states;
+extern struct tree_cache *free_tree_caches;
+
 struct tree_cache *new_tree_cache(const char *);
 struct lease_state *new_lease_state(const char *);
 void free_lease_state(struct lease_state *, const char *);
@@ -635,6 +650,11 @@ void free_tree_cache(struct tree_cache *);
 char *print_hw_addr(int, int, unsigned char *);
 
 /* bpf.c */
+extern struct bpf_insn dhcp_bpf_filter[];
+extern int dhcp_bpf_filter_len;
+extern struct bpf_insn dhcp_bpf_wfilter[];
+extern int dhcp_bpf_wfilter_len;
+
 int if_register_bpf(struct interface_info *);
 void if_register_send(struct interface_info *);
 void if_register_receive(struct interface_info *);
@@ -662,8 +682,9 @@ void *hash_lookup(struct hash_table *, unsigned char *, int);
 
 /* tables.c */
 extern struct option dhcp_options[256];
+
 extern unsigned char dhcp_option_default_priority_list[256];
-extern char *hardware_types[256];
+extern const char *hardware_types[256];
 extern struct hash_table universe_hash;
 extern struct universe dhcp_universe;
 void initialize_universes(void);

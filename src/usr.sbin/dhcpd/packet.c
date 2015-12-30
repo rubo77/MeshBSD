@@ -52,11 +52,12 @@ u_int32_t	wrapsum(u_int32_t);
 u_int32_t
 checksum(unsigned char *buf, unsigned nbytes, u_int32_t sum)
 {
-	int i;
-
+	unsigned i;
+	
 	/* Checksum all the pairs of bytes first... */
 	for (i = 0; i < (nbytes & ~1U); i += 2) {
-		sum += (u_int16_t)ntohs(*((u_int16_t *)(buf + i)));
+		u_int16_t tmp = (u_int16_t)*(buf + i);
+		sum += (u_int16_t)ntohs(tmp);
 		if (sum > 0xFFFF)
 			sum -= 0xFFFF;
 	}
@@ -83,8 +84,8 @@ wrapsum(u_int32_t sum)
 }
 
 void
-assemble_hw_header(struct interface_info *interface, unsigned char *buf,
-    int *bufix, struct hardware *to)
+assemble_hw_header(struct interface_info *interface __unused, 
+	unsigned char *buf, int *bufix, struct hardware *to)
 {
 	struct ether_header eh;
 
@@ -103,9 +104,9 @@ assemble_hw_header(struct interface_info *interface, unsigned char *buf,
 }
 
 void
-assemble_udp_ip_header(struct interface_info *interface, unsigned char *buf,
-    int *bufix, u_int32_t from, u_int32_t to, unsigned int port,
-    unsigned char *data, int len)
+assemble_udp_ip_header(struct interface_info *interface __unused, 
+	unsigned char *buf, int *bufix, u_int32_t from, u_int32_t to, 
+	unsigned int port, unsigned char *data, int len)
 {
 	struct ip ip;
 	struct udphdr udp;
@@ -141,8 +142,8 @@ assemble_udp_ip_header(struct interface_info *interface, unsigned char *buf,
 }
 
 ssize_t
-decode_hw_header(struct interface_info *interface, unsigned char *buf,
-    int bufix, struct hardware *from)
+decode_hw_header(struct interface_info *interface __unused, 
+	unsigned char *buf, int bufix, struct hardware *from)
 {
 	struct ether_header eh;
 
@@ -156,8 +157,8 @@ decode_hw_header(struct interface_info *interface, unsigned char *buf,
 }
 
 ssize_t
-decode_udp_ip_header(struct interface_info *interface, unsigned char *buf,
-    int bufix, struct sockaddr_in *from, int buflen)
+decode_udp_ip_header(struct interface_info *interface __unused, 
+	unsigned char *buf, int bufix, struct sockaddr_in *from, int buflen)
 {
 	struct ip *ip;
 	struct udphdr *udp;
@@ -172,8 +173,8 @@ decode_udp_ip_header(struct interface_info *interface, unsigned char *buf,
 	static unsigned int udp_packets_length_overflow;
 	int len;
 
-	ip = (struct ip *)(buf + bufix);
-	udp = (struct udphdr *)(buf + bufix + ip_len);
+	ip = (void *)(buf + bufix);
+	udp = (void *)(buf + bufix + ip_len);
 
 	/* Check the IP header checksum - it should be zero. */
 	ip_packets_seen++;
