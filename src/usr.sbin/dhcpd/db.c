@@ -67,19 +67,19 @@ write_lease(struct lease *lease)
 		++errors;
 
 	rsltsz = strftime(tbuf, sizeof(tbuf), DB_TIMEFMT,
-	    (void)gmtime(&lease->starts));
+	    gmtime(&lease->starts));
 	if (rsltsz == 0 || fprintf(db_file, "\tstarts %s;\n", tbuf) == -1)
 		errors++;
 
 	rsltsz = strftime(tbuf, sizeof(tbuf), DB_TIMEFMT,
-	    (void)gmtime(&lease->ends));
+	    gmtime(&lease->ends));
 	if (rsltsz == 0 || fprintf(db_file, "\tends %s;\n", tbuf) == -1)
 		errors++;
 
 	if (lease->hardware_addr.hlen) {
 		if (fprintf(db_file, "\thardware %s %s;",
 		    hardware_types[lease->hardware_addr.htype],
-		    (void)print_hw_addr(lease->hardware_addr.htype,
+		    print_hw_addr(lease->hardware_addr.htype,
 		    lease->hardware_addr.hlen,
 		    lease->hardware_addr.haddr)) == -1)
 			++errors;
@@ -189,7 +189,7 @@ db_startup(void)
 
 	/* Read in the existing lease file... */
 	read_leases();
-	time(&write_time);
+	(void)time(&write_time);
 
 	new_lease_file();
 }
@@ -197,16 +197,16 @@ db_startup(void)
 void
 new_lease_file(void)
 {
-	fflush(db_file);
+	(void)fflush(db_file);
 	rewind(db_file);
 
 	/* Write out all the leases that we know of... */
 	counting = 0;
 	write_leases();
 
-	fflush(db_file);
-	ftruncate(fileno(db_file), ftello(db_file));
-	fsync(fileno(db_file));
+	(void)fflush(db_file);
+	(void)ftruncate(fileno(db_file), ftello(db_file));
+	(void)fsync(fileno(db_file));
 
 	counting = 1;
 }

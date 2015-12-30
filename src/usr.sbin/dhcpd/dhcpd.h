@@ -690,14 +690,14 @@ extern struct universe dhcp_universe;
 void initialize_universes(void);
 
 /* convert.c */
-u_int32_t getULong(unsigned char *);
-int32_t getLong(unsigned char *);
-u_int16_t getUShort(unsigned char *);
-int16_t getShort(unsigned char *);
-void putULong(unsigned char *, u_int32_t);
-void putLong(unsigned char *, int32_t);
-void putUShort(unsigned char *, unsigned int);
-void putShort(unsigned char *, int);
+u_int32_t get_u_long(unsigned char *);
+int32_t get_long(unsigned char *);
+u_int16_t get_u_short(unsigned char *);
+int16_t get_short(unsigned char *);
+void put_u_long(unsigned char *, u_int32_t);
+void put_long(unsigned char *, int32_t);
+void put_u_short(unsigned char *, unsigned int);
+void put_short(unsigned char *, int);
 
 /* inet.c */
 struct iaddr subnet_number(struct iaddr, struct iaddr);

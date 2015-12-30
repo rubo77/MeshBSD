@@ -65,7 +65,7 @@ error(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	/* Also log it to stderr? */
@@ -95,7 +95,7 @@ warning(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
@@ -118,7 +118,7 @@ note(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
@@ -141,7 +141,7 @@ debug(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
@@ -204,7 +204,7 @@ parse_warn(const char *fmt, ...)
 	do_percentm(mbuf, sizeof(mbuf), fmt);
 	(void)snprintf(fbuf, sizeof(fbuf), "%s line %d: %s", tlname, lexline, mbuf);
 	va_start(list, fmt);
-	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {

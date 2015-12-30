@@ -83,7 +83,7 @@ dhcpdiscover(struct packet *packet)
 	struct lease *lease = find_lease(packet, packet->shared_network, 0);
 	struct host_decl *hp;
 
-	note("DHCPDISCOVER from %s via %s",
+	(void)note("DHCPDISCOVER from %s via %s",
 	    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 	    packet->raw->chaddr),
 	    packet->raw->giaddr.s_addr ? inet_ntoa(packet->raw->giaddr) :
@@ -91,7 +91,7 @@ dhcpdiscover(struct packet *packet)
 
 	/* Sourceless packets don't make sense here. */
 	if (!packet->shared_network) {
-		note("Packet from unknown subnet: %s",
+		(void)note("Packet from unknown subnet: %s",
 		    inet_ntoa(packet->raw->giaddr));
 		return;
 	}
@@ -105,7 +105,7 @@ dhcpdiscover(struct packet *packet)
 		 * expired, we have nothing to offer this client.
 		 */
 		if (!lease || lease->ends > cur_time) {
-			note("no free leases on subnet %s",
+			(void)note("no free leases on subnet %s",
 			    packet->shared_network->name);
 			return;
 		}
@@ -133,7 +133,7 @@ dhcpdiscover(struct packet *packet)
 			 * reclaim the abandoned lease.
 			 */
 			if ((lease->flags & ABANDONED_LEASE)) {
-				warning("Reclaiming abandoned IP address %s.",
+				(void)warning("Reclaiming abandoned IP address %s.",
 				    piaddr(lease->ip_addr));
 				lease->flags &= ~ABANDONED_LEASE;
 
@@ -166,11 +166,11 @@ dhcpdiscover(struct packet *packet)
 	   request. */
 	if (!lease->host &&
 	    !lease->subnet->group->boot_unknown_clients) {
-		note("Ignoring unknown client %s",
+		(void)note("Ignoring unknown client %s",
 		    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 		    packet->raw->chaddr));
 	} else if (lease->host && !lease->host->group->allow_booting) {
-		note("Declining to boot client %s",
+		(void)note("Declining to boot client %s",
 		    lease->host->name ? lease->host->name :
 		    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 		    packet->raw->chaddr));
@@ -188,10 +188,10 @@ dhcprequest(struct packet *packet)
 
 	cip.len = 4;
 	if (packet->options[DHO_DHCP_REQUESTED_ADDRESS].len == 4)
-		memcpy(cip.iabuf,
+		(void)memcpy(cip.iabuf,
 		    packet->options[DHO_DHCP_REQUESTED_ADDRESS].data, 4);
 	else
-		memcpy(cip.iabuf, &packet->raw->ciaddr.s_addr, 4);
+		(void)memcpy(cip.iabuf, &packet->raw->ciaddr.s_addr, 4);
 	subnet = find_subnet(cip);
 
 	/* Find the lease that matches the address requested by the client. */
@@ -201,7 +201,7 @@ dhcprequest(struct packet *packet)
 	else
 		lease = NULL;
 
-	note("DHCPREQUEST for %s from %s via %s", piaddr(cip),
+	(void)note("DHCPREQUEST for %s from %s via %s", piaddr(cip),
 	    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 	    packet->raw->chaddr),
 	    packet->raw->giaddr.s_addr ? inet_ntoa(packet->raw->giaddr) :
@@ -309,12 +309,12 @@ dhcprequest(struct packet *packet)
 	/* If we're not allowed to serve this client anymore, don't. */
 	if (lease && !lease->host &&
 	    !lease->subnet->group->boot_unknown_clients) {
-		note("Ignoring unknown client %s",
+		(void)note("Ignoring unknown client %s",
 		    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 		    packet->raw->chaddr));
 		return;
 	} else if (lease && lease->host && !lease->host->group->allow_booting) {
-		note("Declining to renew client %s",
+		(void)note("Declining to renew client %s",
 		    lease->host->name ? lease->host->name :
 		    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 		    packet->raw->chaddr));
@@ -377,7 +377,7 @@ dhcprelease(struct packet *packet)
 	 * so let it go.
 	 */
 	if (packet->options[DHO_DHCP_REQUESTED_ADDRESS].len) {
-		note("DHCPRELEASE from %s specified requested-address.",
+		(void)note("DHCPRELEASE from %s specified requested-address.",
 		    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 		    packet->raw->chaddr));
 	}
@@ -404,14 +404,14 @@ dhcprelease(struct packet *packet)
 		 * IP address in ciaddr if the client-identifier fails.
 		 */
 		cip.len = 4;
-		memcpy(cip.iabuf, &packet->raw->ciaddr, 4);
+		(void)memcpy(cip.iabuf, &packet->raw->ciaddr, 4);
 		lease = find_lease_by_ip_addr(cip);
 	}
 
 	/* Can't do >1 inet_ntoa() in a printf()! */
-	strlcpy(ciaddrbuf, inet_ntoa(packet->raw->ciaddr), sizeof(ciaddrbuf));
+	(void)strlcpy(ciaddrbuf, inet_ntoa(packet->raw->ciaddr), sizeof(ciaddrbuf));
 
-	note("DHCPRELEASE of %s from %s via %s (%sfound)",
+	(void)note("DHCPRELEASE of %s from %s via %s (%sfound)",
 	    ciaddrbuf,
 	    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 	    packet->raw->chaddr),
@@ -421,7 +421,7 @@ dhcprelease(struct packet *packet)
 
 	/* If we're already acking this lease, don't do it again. */
 	if (lease && lease->state) {
-		note("DHCPRELEASE already acking lease %s",
+		(void)note("DHCPRELEASE already acking lease %s",
 		    piaddr(lease->ip_addr));
 		return;
 	}
@@ -435,7 +435,7 @@ dhcprelease(struct packet *packet)
 		 * addresses from the server.
 		 */
 		if (!lease->releasing) {
-			note("DHCPRELEASE of %s from %s via %s (found)",
+			(void)note("DHCPRELEASE of %s from %s via %s (found)",
 			    ciaddrbuf,
 			    print_hw_addr(packet->raw->htype,
 			    packet->raw->hlen, packet->raw->chaddr),
@@ -448,7 +448,7 @@ dhcprelease(struct packet *packet)
 			icmp_echorequest(&(lease->ip_addr));
 			++outstanding_pings;
 		} else {
-			note("DHCPRELEASE of %s from %s via %s ignored "
+			(void)note("DHCPRELEASE of %s from %s via %s ignored "
 			    "(release already pending)",
 			    ciaddrbuf,
 			    print_hw_addr(packet->raw->htype,
@@ -458,7 +458,7 @@ dhcprelease(struct packet *packet)
 			    packet->interface->name);
 		}
 	} else {
-		note("DHCPRELEASE of %s from %s via %s for nonexistent lease",
+		(void)note("DHCPRELEASE of %s from %s via %s for nonexistent lease",
 		    ciaddrbuf,
 		    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 		    packet->raw->chaddr),
@@ -479,11 +479,11 @@ dhcpdecline(struct packet *packet)
 		return;
 
 	cip.len = 4;
-	memcpy(cip.iabuf,
+	(void)memcpy(cip.iabuf,
 	    packet->options[DHO_DHCP_REQUESTED_ADDRESS].data, 4);
 	lease = find_lease_by_ip_addr(cip);
 
-	note("DHCPDECLINE on %s from %s via %s",
+	(void)note("DHCPDECLINE on %s from %s via %s",
 	    piaddr(cip), print_hw_addr(packet->raw->htype,
 	    packet->raw->hlen, packet->raw->chaddr),
 	    packet->raw->giaddr.s_addr ? inet_ntoa(packet->raw->giaddr) :
@@ -491,7 +491,7 @@ dhcpdecline(struct packet *packet)
 
 	/* If we're already acking this lease, don't do it again. */
 	if (lease && lease->state) {
-		note("DHCPDECLINE already acking lease %s",
+		(void)note("DHCPDECLINE already acking lease %s",
 		    piaddr(lease->ip_addr));
 		return;
 	}
@@ -516,17 +516,17 @@ dhcpinform(struct packet *packet)
 	if (packet->raw->ciaddr.s_addr) {
 		if (memcmp(&packet->raw->ciaddr.s_addr,
 		    packet->client_addr.iabuf, 4) != 0) {
-			note("DHCPINFORM from %s but ciaddr %s is not "
+			(void)note("DHCPINFORM from %s but ciaddr %s is not "
 			    "consistent with actual address",
 			    piaddr(packet->client_addr),
 			    inet_ntoa(packet->raw->ciaddr));
 			return;
 		}
-		memcpy(cip.iabuf, &packet->raw->ciaddr.s_addr, 4);
+		(void)memcpy(cip.iabuf, &packet->raw->ciaddr.s_addr, 4);
 	} else
-		memcpy(cip.iabuf, &packet->client_addr.iabuf, 4);
+		(void)memcpy(cip.iabuf, &packet->client_addr.iabuf, 4);
 
-	note("DHCPINFORM from %s", piaddr(cip));
+	(void)note("DHCPINFORM from %s", piaddr(cip));
 
 	/* Find the lease that matches the address requested by the client. */
 	subnet = find_subnet(cip);
@@ -535,13 +535,13 @@ dhcpinform(struct packet *packet)
 
 	/* Sourceless packets don't make sense here. */
 	if (!subnet->shared_network) {
-		note("Packet from unknown subnet: %s",
+		(void)note("Packet from unknown subnet: %s",
 		    inet_ntoa(packet->raw->giaddr));
 		return;
 	}
 
 	/* Use a fake lease entry */
-	memset(&lease, 0, sizeof(lease));
+	(void)memset(&lease, 0, sizeof(lease));
 	lease.subnet = subnet;
 	lease.shared_network = subnet->shared_network;
 
@@ -569,16 +569,16 @@ nak_lease(struct packet *packet, struct iaddr *cip)
 	struct packet outgoing;
 	struct tree_cache *options[256], dhcpnak_tree, dhcpmsg_tree, server_tree;
 
-	memset(options, 0, sizeof options);
-	memset(&outgoing, 0, sizeof outgoing);
-	memset(&raw, 0, sizeof raw);
+	(void)memset(options, 0, sizeof(options));
+	(void)memset(&outgoing, 0, sizeof(outgoing));
+	(void)memset(&raw, 0, sizeof(raw));
 	outgoing.raw = &raw;
 
 	/* Set DHCP_MESSAGE_TYPE to DHCPNAK */
 	options[DHO_DHCP_MESSAGE_TYPE] = &dhcpnak_tree;
 	options[DHO_DHCP_MESSAGE_TYPE]->value = &nak;
-	options[DHO_DHCP_MESSAGE_TYPE]->len = sizeof nak;
-	options[DHO_DHCP_MESSAGE_TYPE]->buf_size = sizeof nak;
+	options[DHO_DHCP_MESSAGE_TYPE]->len = sizeof(nak);
+	options[DHO_DHCP_MESSAGE_TYPE]->buf_size = sizeof(nak);
 	options[DHO_DHCP_MESSAGE_TYPE]->timeout = -1;
 	options[DHO_DHCP_MESSAGE_TYPE]->tree = NULL;
 	options[DHO_DHCP_MESSAGE_TYPE]->flags = 0;
@@ -623,7 +623,9 @@ nak_lease(struct packet *packet, struct iaddr *cip)
 /*	memset(&raw.ciaddr, 0, sizeof raw.ciaddr);*/
 	raw.siaddr = packet->interface->primary_address;
 	raw.giaddr = packet->raw->giaddr;
-	memcpy(raw.chaddr, packet->raw->chaddr, sizeof raw.chaddr);
+	
+	(void)memcpy(raw.chaddr, packet->raw->chaddr, sizeof(raw.chaddr));
+	
 	raw.hlen = packet->raw->hlen;
 	raw.htype = packet->raw->htype;
 	raw.xid = packet->raw->xid;
@@ -633,15 +635,15 @@ nak_lease(struct packet *packet, struct iaddr *cip)
 	raw.op = BOOTREPLY;
 
 	/* Report what we're sending... */
-	note("DHCPNAK on %s to %s via %s", piaddr(*cip),
+	(void)note("DHCPNAK on %s to %s via %s", piaddr(*cip),
 	    print_hw_addr(packet->raw->htype, packet->raw->hlen,
 	    packet->raw->chaddr), packet->raw->giaddr.s_addr ?
 	    inet_ntoa(packet->raw->giaddr) : packet->interface->name);
 
 	/* Set up the common stuff... */
-	memset(&to, 0, sizeof to);
+	(void)memset(&to, 0, sizeof(to));
 	to.sin_family = AF_INET;
-	to.sin_len = sizeof to;
+	to.sin_len = sizeof(to);
 
 	from = packet->interface->primary_address;
 
@@ -660,7 +662,7 @@ nak_lease(struct packet *packet, struct iaddr *cip)
 		result = packet->interface->send_packet(packet->interface, &raw,
 		    outgoing.packet_length, from, &to, packet->haddr);
 		if (result == -1)
-			warning("send_fallback: %m");
+			(void)warning("send_fallback: %m");
 		return;
 	} else {
 		to.sin_addr.s_addr = htonl(INADDR_BROADCAST);
@@ -686,7 +688,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	if (lease->state) {
 		if ((lease->flags & STATIC_LEASE) ||
 		    cur_time - lease->timestamp < 60) {
-			note("already acking lease %s", piaddr(lease->ip_addr));
+			(void)note("already acking lease %s", piaddr(lease->ip_addr));
 			return;
 		}
 		free_lease_state(lease->state, "ACK timed out");
@@ -728,7 +730,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	state = new_lease_state("ack_lease");
 	if (!state)
 		error("unable to allocate lease state!");
-	memset(state, 0, sizeof *state);
+	(void)memset(state, 0, sizeof(*state));
 	state->got_requested_address = packet->got_requested_address;
 	state->shared_network = packet->interface->shared_network;
 
@@ -749,7 +751,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 		    packet->options[DHO_HOST_NAME].len + 1);
 		if (!lease->client_hostname)
 			error("no memory for client hostname.\n");
-		memcpy(lease->client_hostname,
+		(void)memcpy(lease->client_hostname,
 		    packet->options[DHO_HOST_NAME].data,
 		    packet->options[DHO_HOST_NAME].len);
 		lease->client_hostname[packet->options[DHO_HOST_NAME].len] = 0;
@@ -763,22 +765,22 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	 * the user class, then from the vendor class.
 	 */
 	if (lease->host && lease->host->group->filename)
-		strlcpy(state->filename, lease->host->group->filename,
-		    sizeof state->filename);
+		(void)strlcpy(state->filename, lease->host->group->filename,
+		    sizeof(state->filename));
 	else if (user_class && user_class->group->filename)
-		strlcpy(state->filename, user_class->group->filename,
-		    sizeof state->filename);
+		(void)strlcpy(state->filename, user_class->group->filename,
+		    sizeof(state->filename));
 	else if (vendor_class && vendor_class->group->filename)
-		strlcpy(state->filename, vendor_class->group->filename,
-		    sizeof state->filename);
+		(void)strlcpy(state->filename, vendor_class->group->filename,
+		    sizeof(state->filename));
 	else if (packet->raw->file[0])
-		strlcpy(state->filename, packet->raw->file,
-		    sizeof state->filename);
+		(void)strlcpy(state->filename, packet->raw->file,
+		    sizeof(state->filename));
 	else if (lease->subnet->group->filename)
-		strlcpy(state->filename, lease->subnet->group->filename,
-		    sizeof state->filename);
+		(void)strlcpy(state->filename, lease->subnet->group->filename,
+		    sizeof(state->filename));
 	else
-		strlcpy(state->filename, "", sizeof state->filename);
+		(void)strlcpy(state->filename, "", sizeof(state->filename));
 
 	/* Choose a server name as above. */
 	if (lease->host && lease->host->group->server_name)
@@ -796,7 +798,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	 * Now we construct a lease structure that contains what we want,
 	 * and call supersede_lease to do the right thing with it.
 	 */
-	memset(&lt, 0, sizeof lt);
+	(void)memset(&lt, 0, sizeof(lt));
 
 	/*
 	 * Use the ip address of the lease that we finally found in
@@ -825,7 +827,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	 */
 	if (offer) {
 		if (packet->options[DHO_DHCP_LEASE_TIME].len == 4) {
-			lease_time = getULong(
+			lease_time = get_u_long(
 			    packet->options[DHO_DHCP_LEASE_TIME].data);
 
 			/*
@@ -866,18 +868,18 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	/* Record the uid, if given... */
 	i = DHO_DHCP_CLIENT_IDENTIFIER;
 	if (packet->options[i].len) {
-		if (packet->options[i].len <= sizeof lt.uid_buf) {
-			memcpy(lt.uid_buf, packet->options[i].data,
+		if (packet->options[i].len <= sizeof(lt.uid_buf)) {
+			(void)memcpy(lt.uid_buf, packet->options[i].data,
 			    packet->options[i].len);
 			lt.uid = lt.uid_buf;
-			lt.uid_max = sizeof lt.uid_buf;
+			lt.uid_max = sizeof(lt.uid_buf);
 			lt.uid_len = packet->options[i].len;
 		} else {
 			lt.uid_max = lt.uid_len = packet->options[i].len;
 			lt.uid = malloc(lt.uid_max);
 			if (!lt.uid)
 				error("can't allocate memory for large uid.");
-			memcpy(lt.uid, packet->options[i].data, lt.uid_len);
+			(void)memcpy(lt.uid, packet->options[i].data, lt.uid_len);
 		}
 	}
 
@@ -891,14 +893,14 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 		   structure. */
 		lease->hardware_addr.hlen = packet->raw->hlen;
 		lease->hardware_addr.htype = packet->raw->htype;
-		memcpy(lease->hardware_addr.haddr, packet->raw->chaddr,
-		    sizeof packet->raw->chaddr); /* XXX */
+		(void)memcpy(lease->hardware_addr.haddr, packet->raw->chaddr,
+		    sizeof(packet->raw->chaddr)); /* XXX */
 	} else {
 		/* Record the hardware address, if given... */
 		lt.hardware_addr.hlen = packet->raw->hlen;
 		lt.hardware_addr.htype = packet->raw->htype;
-		memcpy(lt.hardware_addr.haddr, packet->raw->chaddr,
-		    sizeof packet->raw->chaddr);
+		(void)memcpy(lt.hardware_addr.haddr, packet->raw->chaddr,
+		    sizeof(packet->raw->chaddr));
 
 		/* Install the new information about this lease in the
 		   database.  If this is a DHCPACK or a dynamic BOOTREPLY
@@ -932,13 +934,13 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	state->bootp_flags = packet->raw->flags;
 	state->hops = packet->raw->hops;
 	state->offer = offer;
-	memcpy(&state->haddr, packet->haddr, sizeof state->haddr);
+	(void)memcpy(&state->haddr, packet->haddr, sizeof(state->haddr));
 
 	/* Figure out what options to send to the client: */
 
 	/* Start out with the subnet options... */
-	memcpy(state->options, lease->subnet->group->options,
-	    sizeof state->options);
+	(void)memcpy(state->options, lease->subnet->group->options,
+	    sizeof(state->options));
 
 	/* Vendor and user classes are only supported for DHCP clients. */
 	if (state->offer) {
@@ -976,7 +978,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	i = DHO_DHCP_MAX_MESSAGE_SIZE;
 	if (packet->options[i].data &&
 	    packet->options[i].len == sizeof(u_int16_t))
-		state->max_message_size = getUShort(packet->options[i].data);
+		state->max_message_size = get_u_hort(packet->options[i].data);
 	/* Otherwise, if a maximum message size was specified, use that. */
 	else if (state->options[i] && state->options[i]->value)
 		state->max_message_size = getUShort(state->options[i]->value);
@@ -986,9 +988,9 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	if (packet->options[i].data) {
 		state->prl = calloc(1, packet->options[i].len);
 		if (!state->prl)
-			warning("no memory for parameter request list");
+			(void)warning("no memory for parameter request list");
 		else {
-			memcpy(state->prl, packet->options[i].data,
+			(void)memcpy(state->prl, packet->options[i].data,
 			    packet->options[i].len);
 			state->prl_len = packet->options[i].len;
 		}
@@ -1016,36 +1018,36 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 		state->options[i] = new_tree_cache("message-type");
 		state->options[i]->flags = TC_TEMPORARY;
 		state->options[i]->value = &state->offer;
-		state->options[i]->len = sizeof state->offer;
-		state->options[i]->buf_size = sizeof state->offer;
+		state->options[i]->len = sizeof(state->offer);
+		state->options[i]->buf_size = sizeof(state->offer);
 		state->options[i]->timeout = -1;
 		state->options[i]->tree = NULL;
 
 		i = DHO_DHCP_SERVER_IDENTIFIER;
 		if (!state->options[i]) {
-		 use_primary:
+use_primary:
 			state->options[i] = new_tree_cache("server-id");
 			state->options[i]->value =
 			    (unsigned char *)&state->ip->primary_address;
 			state->options[i]->len =
-			    sizeof state->ip->primary_address;
+			    sizeof(state->ip->primary_address);
 			state->options[i]->buf_size =
 			    state->options[i]->len;
 			state->options[i]->timeout = -1;
 			state->options[i]->tree = NULL;
-			state->from.len = sizeof state->ip->primary_address;
-			memcpy(state->from.iabuf, &state->ip->primary_address,
+			state->from.len = sizeof(state->ip->primary_address);
+			(void)memcpy(state->from.iabuf, &state->ip->primary_address,
 			    state->from.len);
 		} else {
 			/* Find the value of the server identifier... */
 			if (!tree_evaluate(state->options[i]))
 				goto use_primary;
 			if (!state->options[i]->value ||
-			    (state->options[i]->len > sizeof state->from.iabuf))
+			    (state->options[i]->len > sizeof(state->from.iabuf)))
 				goto use_primary;
 
 			state->from.len = state->options[i]->len;
-			memcpy(state->from.iabuf, state->options[i]->value,
+			(void)memcpy(state->from.iabuf, state->options[i]->value,
 			    state->from.len);
 		}
 		/* If we used the vendor class the client specified, we
@@ -1094,28 +1096,28 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 			offered_lease_time =
 			    state->offered_expiry - cur_time;
 
-		putULong((unsigned char *)&state->expiry,
+		put_u_long((unsigned char *)&state->expiry,
 		    offered_lease_time);
 		i = DHO_DHCP_LEASE_TIME;
 		state->options[i] = new_tree_cache("lease-expiry");
 		state->options[i]->flags = TC_TEMPORARY;
 		state->options[i]->value = (unsigned char *)&state->expiry;
-		state->options[i]->len = sizeof state->expiry;
-		state->options[i]->buf_size = sizeof state->expiry;
+		state->options[i]->len = sizeof(state->expiry);
+		state->options[i]->buf_size = sizeof(state->expiry);
 		state->options[i]->timeout = -1;
 		state->options[i]->tree = NULL;
 
 		/* Renewal time is lease time * 0.5. */
 		offered_lease_time /= 2;
-		putULong((unsigned char *)&state->renewal,
+		put_u_long((unsigned char *)&state->renewal,
 			  offered_lease_time);
 		i = DHO_DHCP_RENEWAL_TIME;
 		state->options[i] = new_tree_cache("renewal-time");
 		state->options[i]->flags = TC_TEMPORARY;
 		state->options[i]->value =
 			(unsigned char *)&state->renewal;
-		state->options[i]->len = sizeof state->renewal;
-		state->options[i]->buf_size = sizeof state->renewal;
+		state->options[i]->len = sizeof(state->renewal);
+		state->options[i]->buf_size = sizeof(state->renewal);
 		state->options[i]->timeout = -1;
 		state->options[i]->tree = NULL;
 
@@ -1123,15 +1125,15 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 		/* Rebinding time is lease time * 0.875. */
 		offered_lease_time += (offered_lease_time / 2 +
 		    offered_lease_time / 4);
-		putULong((unsigned char *)&state->rebind,
+		put_u_long((unsigned char *)&state->rebind,
 		    offered_lease_time);
 		i = DHO_DHCP_REBINDING_TIME;
 		state->options[i] = new_tree_cache("rebind-time");
 		state->options[i]->flags = TC_TEMPORARY;
 		state->options[i]->value =
 			(unsigned char *)&state->rebind;
-		state->options[i]->len = sizeof state->rebind;
-		state->options[i]->buf_size = sizeof state->rebind;
+		state->options[i]->len = sizeof(state->rebind);
+		state->options[i]->buf_size = sizeof(state->rebind);
 		state->options[i]->timeout = -1;
 		state->options[i]->tree = NULL;
 	}
@@ -1196,7 +1198,7 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 
 	/* RFC 2131: MUST NOT send client identifier option in OFFER/ACK! */
 	i = DHO_DHCP_CLIENT_IDENTIFIER;
-	memset(&state->options[i], 0, sizeof(state->options[i]));
+	(void)memset(&state->options[i], 0, sizeof(state->options[i]));
 
 	lease->state = state;
 
@@ -1231,23 +1233,23 @@ dhcp_reply(struct lease *lease)
 		error("dhcp_reply was supplied lease with no state!");
 
 	/* Compose a response for the client... */
-	memset(&raw, 0, sizeof raw);
+	(void)memset(&raw, 0, sizeof(raw));
 
 	/* Copy in the filename if given; otherwise, flag the filename
 	   buffer as available for options. */
 	if (state->filename[0])
-		strlcpy(raw.file, state->filename, sizeof raw.file);
+		(void)strlcpy(raw.file, state->filename, sizeof(raw.file));
 	else
 		bufs |= 1;
 
 	/* Copy in the server name if given; otherwise, flag the
 	   server_name buffer as available for options. */
 	if (state->server_name)
-		strlcpy(raw.sname, state->server_name, sizeof raw.sname);
+		(void)strlcpy(raw.sname, state->server_name, sizeof(raw.sname));
 	else
 		bufs |= 2; /* XXX */
 
-	memcpy(raw.chaddr, lease->hardware_addr.haddr, sizeof raw.chaddr);
+	(void)memcpy(raw.chaddr, lease->hardware_addr.haddr, sizeof(raw.chaddr));
 	raw.hlen = lease->hardware_addr.hlen;
 	raw.htype = lease->hardware_addr.htype;
 
@@ -1288,17 +1290,17 @@ dhcp_reply(struct lease *lease)
 			free_tree_cache(state->options[i]);
 	}
 
-	memcpy(&raw.ciaddr, &state->ciaddr, sizeof raw.ciaddr);
+	(void)memcpy(&raw.ciaddr, &state->ciaddr, sizeof(raw.ciaddr));
 	if ((lease->flags & INFORM_NOLEASE) == 0)
-		memcpy(&raw.yiaddr, lease->ip_addr.iabuf, 4);
+		(void)memcpy(&raw.yiaddr, lease->ip_addr.iabuf, 4);
 
 	/* Figure out the address of the next server. */
 	if (lease->host && lease->host->group->next_server.len)
-		memcpy(&raw.siaddr, lease->host->group->next_server.iabuf, 4);
+		(void)memcpy(&raw.siaddr, lease->host->group->next_server.iabuf, 4);
 	else if (lease->subnet->group->next_server.len)
-		memcpy(&raw.siaddr, lease->subnet->group->next_server.iabuf, 4);
+		(void)memcpy(&raw.siaddr, lease->subnet->group->next_server.iabuf, 4);
 	else if (lease->subnet->interface_address.len)
-		memcpy(&raw.siaddr, lease->subnet->interface_address.iabuf, 4);
+		(void)memcpy(&raw.siaddr, lease->subnet->interface_address.iabuf, 4);
 	else
 		raw.siaddr = state->ip->primary_address;
 
@@ -1311,18 +1313,18 @@ dhcp_reply(struct lease *lease)
 	raw.op = BOOTREPLY;
 
 	/* Can't do >1 inet_ntoa() in a printf()! */
-	strlcpy(ciaddrbuf, inet_ntoa(state->ciaddr), sizeof(ciaddrbuf));
+	(void)strlcpy(ciaddrbuf, inet_ntoa(state->ciaddr), sizeof(ciaddrbuf));
 
 	/* Say what we're doing... */
 	if ((state->offer == DHCPACK) && (lease->flags & INFORM_NOLEASE))
-		note("DHCPACK to %s (%s) via %s",
+		(void)note("DHCPACK to %s (%s) via %s",
 		    ciaddrbuf,
 		    print_hw_addr(lease->hardware_addr.htype,
 		        lease->hardware_addr.hlen, lease->hardware_addr.haddr),
 		    state->giaddr.s_addr ? inet_ntoa(state->giaddr) :
 		        state->ip->name);
 	else
-		note("%s on %s to %s via %s",
+		(void)note("%s on %s to %s via %s",
 		    (state->offer ? (state->offer == DHCPACK ? "DHCPACK" :
 			"DHCPOFFER") : "BOOTREPLY"),
 		    piaddr(lease->ip_addr),
@@ -1331,10 +1333,10 @@ dhcp_reply(struct lease *lease)
 		    state->giaddr.s_addr ? inet_ntoa(state->giaddr) :
 		        state->ip->name);
 
-	memset(&to, 0, sizeof to);
+	(void)memset(&to, 0, sizeof(to));
 	to.sin_family = AF_INET;
 #ifdef HAVE_SA_LEN
-	to.sin_len = sizeof to;
+	to.sin_len = sizeof(to);
 #endif
 
 	/* Make sure outgoing packets are at least as big
@@ -1347,9 +1349,9 @@ dhcp_reply(struct lease *lease)
 		to.sin_addr = raw.giaddr;
 		to.sin_port = server_port;
 
-		memcpy(&from, state->from.iabuf, sizeof from);
+		(void)memcpy(&from, state->from.iabuf, sizeof(from));
 
-		(void) state->ip->send_packet(state->ip, &raw,
+		(void)state->ip->send_packet(state->ip, &raw,
 		    packet_length, from, &to, &state->haddr);
 
 		free_lease_state(state, "dhcp_reply gateway");
@@ -1388,12 +1390,12 @@ dhcp_reply(struct lease *lease)
 	} else {
 		to.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 		to.sin_port = client_port;
-		memset(&state->haddr, 0xff, sizeof state->haddr);
+		(void)memset(&state->haddr, 0xff, sizeof(state->haddr));
 	}
 
-	memcpy(&from, state->from.iabuf, sizeof from);
+	(void)memcpy(&from, state->from.iabuf, sizeof(from));
 
-	(void) state->ip->send_packet(state->ip, &raw, packet_length,
+	(void)state->ip->send_packet(state->ip, &raw, packet_length,
 	    from, &to, &state->haddr);
 
 	free_lease_state(state, "dhcp_reply");
@@ -1414,12 +1416,12 @@ find_lease(struct packet *packet, struct shared_network *share,
 	if (packet->options[DHO_DHCP_REQUESTED_ADDRESS].len == 4) {
 		packet->got_requested_address = 1;
 		cip.len = 4;
-		memcpy(cip.iabuf,
+		(void)memcpy(cip.iabuf,
 		    packet->options[DHO_DHCP_REQUESTED_ADDRESS].data,
 		    cip.len);
 	} else if (packet->raw->ciaddr.s_addr) {
 		cip.len = 4;
-		memcpy(cip.iabuf, &packet->raw->ciaddr, 4);
+		(void)memcpy(cip.iabuf, &packet->raw->ciaddr, 4);
 	} else
 		cip.len = 0;
 
@@ -1469,12 +1471,12 @@ find_lease(struct packet *packet, struct shared_network *share,
 	   any other lease, so we might as well return now. */
 	if (packet->packet_type == DHCPREQUEST && fixed_lease &&
 	    (fixed_lease->ip_addr.len != cip.len ||
-	    memcmp(fixed_lease->ip_addr.iabuf, cip.iabuf, cip.len))) {
+	    (void)memcmp(fixed_lease->ip_addr.iabuf, cip.iabuf, cip.len))) {
 		if (ours)
 			*ours = 1;
-		strlcpy(dhcp_message, "requested address is incorrect",
+		(void)strlcpy(dhcp_message, "requested address is incorrect",
 		    sizeof(dhcp_message));
-		return NULL;
+		return (NULL);
 	}
 
 	/* Try to find a lease that's been attached to the client's
@@ -1517,7 +1519,7 @@ find_lease(struct packet *packet, struct shared_network *share,
 	   that client. */
 	if (ip_lease && (ip_lease->shared_network != share)) {
 		ip_lease = NULL;
-		strlcpy(dhcp_message, "requested address on bad subnet",
+		(void)strlcpy(dhcp_message, "requested address on bad subnet",
 		    sizeof(dhcp_message));
 	}
 
@@ -1539,7 +1541,7 @@ find_lease(struct packet *packet, struct shared_network *share,
 		    ip_lease->hardware_addr.hlen))) {
 			if (uid_lease) {
 				if (uid_lease->ends > cur_time) {
-					warning("client %s has duplicate leases on %s",
+					(void)warning("client %s has duplicate leases on %s",
 					    print_hw_addr(packet->raw->htype,
 					    packet->raw->hlen, packet->raw->chaddr),
 					    ip_lease->shared_network->name);
@@ -1550,7 +1552,7 @@ find_lease(struct packet *packet, struct shared_network *share,
 				uid_lease = ip_lease;
 			}
 		} else {
-			strlcpy(dhcp_message, "requested address is not available",
+			(void)strlcpy(dhcp_message, "requested address is not available",
 			    sizeof(dhcp_message));
 			ip_lease = NULL;
 		}
@@ -1561,17 +1563,17 @@ find_lease(struct packet *packet, struct shared_network *share,
 		if (packet->packet_type == DHCPREQUEST && fixed_lease) {
 			fixed_lease = NULL;
 db_conflict:
-			warning("Both dynamic and static leases present for %s.",
+			(void)warning("Both dynamic and static leases present for %s.",
 			    piaddr(cip));
-			warning("Either remove host declaration %s or remove %s",
+			(void)warning("Either remove host declaration %s or remove %s",
 			    (fixed_lease && fixed_lease->host ?
 			    (fixed_lease->host->name ? fixed_lease->host->name :
 			    piaddr(cip)) : piaddr(cip)), piaddr(cip));
-			warning("from the dynamic address pool for %s",
+			(void)warning("from the dynamic address pool for %s",
 			    share->name);
 			if (fixed_lease)
 				ip_lease = NULL;
-			strlcpy(dhcp_message, "database conflict - call for help!",
+			(void)strlcpy(dhcp_message, "database conflict - call for help!",
 			    sizeof(dhcp_message));
 		}
 	}
@@ -1602,7 +1604,7 @@ db_conflict:
 	   begin with.   If we have come up with a matching lease,
 	   set the message to bad network in case we have to throw it out. */
 	if (!ip_lease) {
-		strlcpy(dhcp_message, "requested address not available",
+		(void)strlcpy(dhcp_message, "requested address not available",
 		    sizeof(dhcp_message));
 	}
 
@@ -1627,7 +1629,7 @@ db_conflict:
 	   matches the requested IP address.   If it doesn't, don't return a
 	   lease at all. */
 	if (packet->packet_type == DHCPREQUEST && !ip_lease && !fixed_lease)
-		return NULL;
+		return (NULL);
 
 	/* At this point, if fixed_lease is nonzero, we can assign it to
 	   this client. */
@@ -1688,13 +1690,13 @@ db_conflict:
 	   the administrator will eventually investigate. */
 	if (lease && (lease->flags & ABANDONED_LEASE)) {
 		if (packet->packet_type == DHCPREQUEST) {
-			warning("Reclaiming REQUESTed abandoned IP address %s.",
+			(void)warning("Reclaiming REQUESTed abandoned IP address %s.",
 			    piaddr(lease->ip_addr));
 			lease->flags &= ~ABANDONED_LEASE;
 		} else
 			lease = NULL;
 	}
-	return lease;
+	return (lease);
 }
 
 /*
@@ -1726,5 +1728,5 @@ mockup_lease(struct packet *packet __unused, struct shared_network *share,
 	mock.hardware_addr = hp->interface;
 	mock.starts = mock.timestamp = mock.ends = MIN_TIME;
 	mock.flags = STATIC_LEASE;
-	return &mock;
+	return (&mock);
 }

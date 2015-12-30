@@ -46,7 +46,7 @@
 #include "dhcpd.h"
 
 u_int32_t
-getULong(unsigned char *buf)
+get_u_ong(unsigned char *buf)
 {
 	u_int32_t ibuf;
 
@@ -55,7 +55,7 @@ getULong(unsigned char *buf)
 }
 
 u_int16_t
-getUShort(unsigned char *buf)
+get_u_short(unsigned char *buf)
 {
 	u_int16_t ibuf;
 
@@ -64,7 +64,7 @@ getUShort(unsigned char *buf)
 }
 
 void
-putULong(unsigned char *obuf, u_int32_t val)
+put_u_long(unsigned char *obuf, u_int32_t val)
 {
 	u_int32_t tmp = htonl(val);
 
@@ -72,7 +72,7 @@ putULong(unsigned char *obuf, u_int32_t val)
 }
 
 void
-putLong(unsigned char *obuf, int32_t val)
+put_long(unsigned char *obuf, int32_t val)
 {
 	int32_t tmp = htonl(val);
 
@@ -80,7 +80,7 @@ putLong(unsigned char *obuf, int32_t val)
 }
 
 void
-putUShort(unsigned char *obuf, unsigned int val)
+put_u_short(unsigned char *obuf, unsigned int val)
 {
 	u_int16_t tmp = htons(val);
 
@@ -88,7 +88,7 @@ putUShort(unsigned char *obuf, unsigned int val)
 }
 
 void
-putShort(unsigned char *obuf, int val)
+put_short(unsigned char *obuf, int val)
 {
 	int16_t tmp = htons(val);
 
