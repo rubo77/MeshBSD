@@ -50,7 +50,7 @@ getULong(unsigned char *buf)
 {
 	u_int32_t ibuf;
 
-	memcpy(&ibuf, buf, sizeof(ibuf));
+	(void)memcpy(&ibuf, buf, sizeof(ibuf));
 	return (ntohl(ibuf));
 }
 
@@ -59,7 +59,7 @@ getUShort(unsigned char *buf)
 {
 	u_int16_t ibuf;
 
-	memcpy(&ibuf, buf, sizeof(ibuf));
+	(void)memcpy(&ibuf, buf, sizeof(ibuf));
 	return (ntohs(ibuf));
 }
 
@@ -68,7 +68,7 @@ putULong(unsigned char *obuf, u_int32_t val)
 {
 	u_int32_t tmp = htonl(val);
 
-	memcpy(obuf, &tmp, sizeof(tmp));
+	(void)memcpy(obuf, &tmp, sizeof(tmp));
 }
 
 void
@@ -76,7 +76,7 @@ putLong(unsigned char *obuf, int32_t val)
 {
 	int32_t tmp = htonl(val);
 
-	memcpy(obuf, &tmp, sizeof(tmp));
+	(void)memcpy(obuf, &tmp, sizeof(tmp));
 }
 
 void
@@ -84,7 +84,7 @@ putUShort(unsigned char *obuf, unsigned int val)
 {
 	u_int16_t tmp = htons(val);
 
-	memcpy(obuf, &tmp, sizeof(tmp));
+	(void)memcpy(obuf, &tmp, sizeof(tmp));
 }
 
 void
@@ -92,5 +92,5 @@ putShort(unsigned char *obuf, int val)
 {
 	int16_t tmp = htons(val);
 
-	memcpy(obuf, &tmp, sizeof(tmp));
+	(void)memcpy(obuf, &tmp, sizeof(tmp));
 }

@@ -684,7 +684,7 @@ initialize_universes(void)
 {
 	int i;
 
-	dhcp_universe.name = "dhcp";
+	dhcp_universe.name = (char *)"dhcp";
 	dhcp_universe.hash = new_hash();
 	if (!dhcp_universe.hash)
 		error("Can't allocate dhcp option hash table.");

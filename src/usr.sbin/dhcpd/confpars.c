@@ -80,9 +80,9 @@ readconf(void)
 						 declaration);
 	} while (1);
 	token = next_token(&val, cfile); /* Clear the peek buffer */
-	fclose(cfile);
+	(void)fclose(cfile);
 
-	return !warnings_occurred;
+	return (!warnings_occurred);
 }
 
 /* lease-file :== lease-declarations EOF
@@ -109,10 +109,10 @@ read_leases(void)
 	   thinking that no leases have been assigned to anybody, which
 	   could create severe network chaos. */
 	if ((cfile = fopen(path_dhcpd_db, "r")) == NULL) {
-		warning("Can't open lease database %s: %m -- %s",
+		(void)warning("Can't open lease database %s: %m -- %s",
 		    path_dhcpd_db,
 		    "check for failed database rewrite attempt!");
-		warning("Please read the dhcpd.leases manual page if you");
+		(void)warning("Please read the dhcpd.leases manual page if you");
 		error("don't know what to do about this.");
 	}
 
@@ -121,7 +121,7 @@ read_leases(void)
 		if (token == EOF)
 			break;
 		if (token != TOK_LEASE) {
-			warning("Corrupt lease file - possible data loss!");
+			(void)warning("Corrupt lease file - possible data loss!");
 			skip_to_semi(cfile);
 		} else {
 			struct lease *lease;
@@ -133,7 +133,7 @@ read_leases(void)
 		}
 
 	} while (1);
-	fclose(cfile);
+	(void)fclose(cfile);
 }
 
 /* statement :== parameter | declaration
@@ -188,7 +188,7 @@ int parse_statement(cfile, group, type, host_decl, declaration)
 			parse_warn("host declarations not allowed here.");
 			skip_to_semi(cfile);
 		}
-		return 1;
+		return (1);
 
 	case TOK_GROUP:
 		if (type != HOST_DECL)
@@ -197,7 +197,7 @@ int parse_statement(cfile, group, type, host_decl, declaration)
 			parse_warn("host declarations not allowed here.");
 			skip_to_semi(cfile);
 		}
-		return 1;
+		return (1);
 
 	case TOK_TIMESTAMP:
 		break;
@@ -213,13 +213,13 @@ int parse_statement(cfile, group, type, host_decl, declaration)
 		}
 
 		parse_shared_net_declaration(cfile, group);
-		return 1;
+		return (1);
 
 	case TOK_SUBNET:
 		if (type == HOST_DECL || type == SUBNET_DECL) {
 			parse_warn("subnet declarations not allowed here.");
 			skip_to_semi(cfile);
-			return 1;
+			return (1);
 		}
 
 		/* If we're in a subnet declaration, just do the parse. */
@@ -257,15 +257,15 @@ int parse_statement(cfile, group, type, host_decl, declaration)
 				share->subnets->group->authoritative;
 			enter_shared_network(share);
 		}
-		return 1;
+		return (1);
 
 	case TOK_VENDOR_CLASS:
 		parse_class_declaration(cfile, group, 0);
-		return 1;
+		return (1);
 
 	case TOK_USER_CLASS:
 		parse_class_declaration(cfile, group, 1);
-		return 1;
+		return (1);
 
 	case TOK_DEFAULT_LEASE_TIME:
 		parse_lease_time(cfile, &group->default_lease_time);
@@ -412,10 +412,10 @@ int parse_statement(cfile, group, type, host_decl, declaration)
 
 	if (declaration) {
 		parse_warn("parameters not allowed after first declaration.");
-		return 1;
+		return (1);
 	}
 
-	return 0;
+	return (0);
 }
 
 /* allow-deny-keyword :== BOOTP
@@ -473,14 +473,14 @@ parse_boolean(FILE *cfile)
 	else {
 		parse_warn("boolean value (true/false/on/off) expected");
 		skip_to_semi(cfile);
-		return 0;
+		return (0);
 	}
 	parse_semi(cfile);
-	return rv;
+	return (rv);
 }
 
 /* Expect a left brace; if there isn't one, skip over the rest of the
-   statement and return zero; otherwise, return 1. */
+   statement and return zero; otherwise, return (1). */
 
 int
 parse_lbrace(FILE *cfile)
@@ -492,9 +492,9 @@ parse_lbrace(FILE *cfile)
 	if (token != '{') {
 		parse_warn("expecting left brace.");
 		skip_to_semi(cfile);
-		return 0;
+		return (0);
 	}
-	return 1;
+	return (1);
 }
 
 
@@ -853,12 +853,12 @@ parse_cidr(FILE *cfile, unsigned char *addr, unsigned char *prefix)
 		goto nocidr;
 	}
 
-	return 1;
+	return (1);
 
 nocidr:
 	if (token != ';')
 		skip_to_semi(cfile);
-	return 0;
+	return (0);
 }
 
 /* ip-addr-or-hostname :== ip-address | hostname
@@ -892,7 +892,7 @@ struct tree *parse_ip_addr_or_hostname(cfile, uniform)
 			rv = tree_const(h->h_addr_list[0], h->h_length);
 			if (!uniform)
 				rv = tree_limit(rv, 4);
-			return rv;
+			goto done;
 		}
 	}
 
@@ -900,9 +900,9 @@ struct tree *parse_ip_addr_or_hostname(cfile, uniform)
 		if (!parse_numeric_aggregate(cfile, addr, &len, '.', 10, 8)) {
 			parse_warn("%s (%d): expecting IP address or hostname",
 				    val, token);
-			return NULL;
-		}
-		rv = tree_const(addr, len);
+			rv = NULL;
+		} else
+			rv = tree_const(addr, len);
 	} else {
 		if (token != '{' && token != '}')
 			token = next_token(&val, cfile);
@@ -910,10 +910,10 @@ struct tree *parse_ip_addr_or_hostname(cfile, uniform)
 			    val, token);
 		if (token != ';')
 			skip_to_semi(cfile);
-		return NULL;
+		rv = NULL;
 	}
-
-	return rv;
+done:
+	return (rv);
 }
 
 
@@ -941,8 +941,8 @@ struct tree_cache *parse_fixed_addr_param(cfile)
 	} while (token == ',');
 
 	if (!parse_semi(cfile))
-		return NULL;
-	return tree_cache(tree);
+		return (NULL);
+	return (tree_cache(tree));
 }
 
 /* option_parameter :== identifier DOT identifier <syntax> SEMI
@@ -1168,7 +1168,7 @@ void parse_option_param(cfile, group)
 					    (cprefix + 7) / 8));
 				break;
 			default:
-				warning("Bad format %c in parse_option_param.",
+				(void)warning("Bad format %c in parse_option_param.",
 				    *fmt);
 				skip_to_semi(cfile);
 				return;
@@ -1222,16 +1222,16 @@ parse_lease_declaration(FILE *cfile)
 	static struct lease lease;
 
 	/* Zap the lease structure... */
-	memset(&lease, 0, sizeof lease);
+	(void)memset(&lease, 0, sizeof lease);
 
 	/* Get the address for which the lease has been issued. */
 	if (!parse_numeric_aggregate(cfile, addr, &len, '.', 10, 8))
-		return NULL;
+		return (NULL);
 	memcpy(lease.ip_addr.iabuf, addr, len);
 	lease.ip_addr.len = len;
 
 	if (!parse_lbrace(cfile))
-		return NULL;
+		return (NULL);
 
 	do {
 		token = next_token(&val, cfile);
@@ -1244,7 +1244,9 @@ parse_lease_declaration(FILE *cfile)
 		strlcpy(tbuf, val, sizeof tbuf);
 
 		/* Parse any of the times associated with the lease. */
-		if (token == TOK_STARTS || token == TOK_ENDS || token == TOK_TIMESTAMP) {
+		if (token == TOK_STARTS 
+			|| token == TOK_ENDS 
+			|| token == TOK_TIMESTAMP) {
 			time_t t;
 			t = parse_date(cfile);
 			switch (token) {
@@ -1279,8 +1281,8 @@ parse_lease_declaration(FILE *cfile)
 					lease.uid_len = strlen(val);
 					lease.uid = malloc(lease.uid_len);
 					if (!lease.uid) {
-						warning("no space for uid");
-						return NULL;
+						(void)warning("no space for uid");
+						return (NULL);
 					}
 					memcpy(lease.uid, val, lease.uid_len);
 					parse_semi(cfile);
@@ -1290,8 +1292,8 @@ parse_lease_declaration(FILE *cfile)
 					    parse_numeric_aggregate(cfile,
 					    NULL, &lease.uid_len, ':', 16, 8);
 					if (!lease.uid) {
-						warning("no space for uid");
-						return NULL;
+						(void)warning("no space for uid");
+						return (NULL);
 					}
 					if (lease.uid_len == 0) {
 						lease.uid = NULL;
@@ -1310,7 +1312,7 @@ parse_lease_declaration(FILE *cfile)
 				if (!is_identifier(token)) {
 					if (token != ';')
 						skip_to_semi(cfile);
-					return NULL;
+					return (NULL);
 				}
 				/* for now, we aren't using this. */
 				break;
@@ -1341,7 +1343,7 @@ parse_lease_declaration(FILE *cfile)
 					    parse_host_name(cfile);
 				if (!lease.hostname) {
 					seenbit = 0;
-					return NULL;
+					return (NULL);
 				}
 				break;
 
@@ -1359,7 +1361,7 @@ parse_lease_declaration(FILE *cfile)
 			default:
 				skip_to_semi(cfile);
 				seenbit = 0;
-				return NULL;
+				return (NULL);
 			}
 
 			if (token != TOK_HARDWARE && token != TOK_STRING) {
@@ -1367,7 +1369,7 @@ parse_lease_declaration(FILE *cfile)
 				if (token != ';') {
 					parse_warn("semicolon expected.");
 					skip_to_semi(cfile);
-					return NULL;
+					return (NULL);
 				}
 			}
 		}
@@ -1378,7 +1380,7 @@ parse_lease_declaration(FILE *cfile)
 			seenmask |= seenbit;
 
 	} while (1);
-	return &lease;
+	return (&lease);
 }
 
 /*

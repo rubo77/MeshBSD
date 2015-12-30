@@ -67,19 +67,19 @@ write_lease(struct lease *lease)
 		++errors;
 
 	rsltsz = strftime(tbuf, sizeof(tbuf), DB_TIMEFMT,
-	    gmtime(&lease->starts));
+	    (void)gmtime(&lease->starts));
 	if (rsltsz == 0 || fprintf(db_file, "\tstarts %s;\n", tbuf) == -1)
 		errors++;
 
 	rsltsz = strftime(tbuf, sizeof(tbuf), DB_TIMEFMT,
-	    gmtime(&lease->ends));
+	    (void)gmtime(&lease->ends));
 	if (rsltsz == 0 || fprintf(db_file, "\tends %s;\n", tbuf) == -1)
 		errors++;
 
 	if (lease->hardware_addr.hlen) {
 		if (fprintf(db_file, "\thardware %s %s;",
 		    hardware_types[lease->hardware_addr.htype],
-		    print_hw_addr(lease->hardware_addr.htype,
+		    (void)print_hw_addr(lease->hardware_addr.htype,
 		    lease->hardware_addr.hlen,
 		    lease->hardware_addr.haddr)) == -1)
 			++errors;
@@ -135,7 +135,7 @@ bad_hostname:
 		++errors;
 
 	if (errors)
-		note("write_lease: unable to write lease %s",
+		(void)note("write_lease: unable to write lease %s",
 		    piaddr(lease->ip_addr));
 
 	return (!errors);
@@ -153,12 +153,12 @@ commit_leases(void)
 	 * rewrite fails.
 	 */
 	if (fflush(db_file) == EOF) {
-		note("commit_leases: unable to commit: %m");
+		(void)note("commit_leases: unable to commit: %m");
 		return (0);
 	}
 
 	if (fsync(fileno(db_file)) == -1) {
-		note("commit_leases: unable to commit: %m");
+		(void)note("commit_leases: unable to commit: %m");
 		return (0);
 	}
 

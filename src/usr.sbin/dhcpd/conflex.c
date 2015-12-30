@@ -229,9 +229,9 @@ read_string(FILE *cfile)
 	} while (i < (sizeof(tokbuf) - 1) && c != EOF && c != '"');
 
 	if (c == EOF)
-		parse_warn("eof in string constant");
+		(void)parse_warn("eof in string constant");
 	else if (c != '"')
-		parse_warn("string constant larger than internal buffer");
+		(void)parse_warn("string constant larger than internal buffer");
 
 	tokbuf[i] = 0;
 	tval = tokbuf;
@@ -251,7 +251,7 @@ read_num_or_name(int c, FILE *cfile)
 	for (i = 1; i < sizeof(tokbuf); i++) {
 		c = get_char(cfile);
 		if (!isascii(c) || (c != '-' && c != '_' && !isalnum(c))) {
-			ungetc(c, cfile);
+			(void)ungetc(c, cfile);
 			ugflag = 1;
 			break;
 		}
@@ -260,7 +260,7 @@ read_num_or_name(int c, FILE *cfile)
 		tokbuf[i] = c;
 	}
 	if (i == sizeof(tokbuf)) {
-		parse_warn("token larger than internal buffer");
+		(void)parse_warn("token larger than internal buffer");
 		i--;
 		c = tokbuf[i];
 		if (isxdigit(c))

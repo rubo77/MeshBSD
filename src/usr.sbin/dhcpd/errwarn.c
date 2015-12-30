@@ -65,19 +65,19 @@ error(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	/* Also log it to stderr? */
 	if (log_perror) {
-		write(STDERR_FILENO, mbuf, strlen(mbuf));
-		write(STDERR_FILENO, "\n", 1);
+		(void)write(STDERR_FILENO, mbuf, strlen(mbuf));
+		(void)write(STDERR_FILENO, "\n", 1);
 	} else
 		syslog(log_priority | LOG_ERR, "%s", mbuf);
 
 	if (log_perror) {
-		fprintf(stderr, "exiting.\n");
-		fflush(stderr);
+		(void)fprintf(stderr, "exiting.\n");
+		(void)fflush(stderr);
 	} else
 		syslog(LOG_CRIT, "exiting.");
 
@@ -95,12 +95,12 @@ warning(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
-		write(STDERR_FILENO, mbuf, strlen(mbuf));
-		write(STDERR_FILENO, "\n", 1);
+		(void)write(STDERR_FILENO, mbuf, strlen(mbuf));
+		(void)write(STDERR_FILENO, "\n", 1);
 	} else
 		syslog(log_priority | LOG_ERR, "%s", mbuf);
 
@@ -118,12 +118,12 @@ note(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
-		write(STDERR_FILENO, mbuf, strlen(mbuf));
-		write(STDERR_FILENO, "\n", 1);
+		(void)write(STDERR_FILENO, mbuf, strlen(mbuf));
+		(void)write(STDERR_FILENO, "\n", 1);
 	} else
 		syslog(log_priority | LOG_INFO, "%s", mbuf);
 
@@ -141,12 +141,12 @@ debug(const char *fmt, ...)
 	do_percentm(fbuf, sizeof(fbuf), fmt);
 
 	va_start(list, fmt);
-	vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
-		write(STDERR_FILENO, mbuf, strlen(mbuf));
-		write(STDERR_FILENO, "\n", 1);
+		(void)write(STDERR_FILENO, mbuf, strlen(mbuf));
+		(void)write(STDERR_FILENO, "\n", 1);
 	} else
 		syslog(log_priority | LOG_DEBUG, "%s", mbuf);
 
@@ -202,9 +202,9 @@ parse_warn(const char *fmt, ...)
 	size_t iovcnt;
 
 	do_percentm(mbuf, sizeof(mbuf), fmt);
-	snprintf(fbuf, sizeof(fbuf), "%s line %d: %s", tlname, lexline, mbuf);
+	(void)snprintf(fbuf, sizeof(fbuf), "%s line %d: %s", tlname, lexline, mbuf);
 	va_start(list, fmt);
-	vsnprintf(mbuf, sizeof(mbuf), fbuf, list);
+	(void)vsnprintfmbuf, sizeof(mbuf), fbuf, list);
 	va_end(list);
 
 	if (log_perror) {
@@ -224,7 +224,7 @@ parse_warn(const char *fmt, ...)
 			iov[5].iov_len = 2;
 			iovcnt += 2;
 		}
-		writev(STDERR_FILENO, iov, iovcnt);
+		(void)writev(STDERR_FILENO, iov, iovcnt);
 	} else {
 		syslog(log_priority | LOG_ERR, "%s", mbuf);
 		syslog(log_priority | LOG_ERR, "%s", token_line);
