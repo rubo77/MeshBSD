@@ -95,17 +95,17 @@ struct iaddrlist {
 struct hash_bucket {
 	struct hash_bucket *next;
 	unsigned char *name;
-	int len;
+	size_t len;
 	unsigned char *value;
 };
 
 struct hash_table {
-	int hash_count;
+	size_t hash_count;
 	struct hash_bucket *buckets[DEFAULT_HASH_SIZE];
 };
 
 struct option_data {
-	int len;
+	size_t len;
 	u_int8_t *data;
 };
 
@@ -131,7 +131,7 @@ struct domain_search_list {
 /* A dhcp packet and the pointers to its option values. */
 struct packet {
 	struct dhcp_packet *raw;
-	int packet_length;
+	size_t packet_length;
 	int packet_type;
 	int options_valid;
 	int client_port;
@@ -162,8 +162,8 @@ struct lease {
 	struct iaddr ip_addr;
 	time_t starts, ends, timestamp;
 	unsigned char *uid;
-	int uid_len;
-	int uid_max;
+	size_t uid_len;
+	size_t uid_max;
 	unsigned char uid_buf[32];
 	char *hostname;
 	char *client_hostname;
@@ -200,9 +200,9 @@ struct lease_state {
 
 	struct iaddr from;
 
-	int max_message_size;
+	size_t max_message_size;
 	u_int8_t *prl;
-	int prl_len;
+	size_t prl_len;
 	int got_requested_address;	/* True if client sent the
 					   dhcp-requested-address option. */
 	int got_server_identifier;	/* True if client sent the
@@ -341,7 +341,7 @@ struct client_config {
 	struct option_data send_options[256]; /* Send these to server. */
 	u_int8_t required_options[256]; /* Options server must supply. */
 	u_int8_t requested_options[256]; /* Options to request from server. */
-	int requested_option_count;	/* Number of requested options. */
+	size_t requested_option_count;	/* Number of requested options. */
 	time_t timeout;			/* Start to panic if we don't get a
 					   lease in this time period when
 					   SELECTING. */
@@ -387,17 +387,17 @@ struct client_state {
 	struct string_list *medium;		   /* Last media type tried. */
 
 	struct dhcp_packet packet;		    /* Outgoing DHCP packet. */
-	int packet_length;	       /* Actual length of generated packet. */
+	size_t packet_length;	       /* Actual length of generated packet. */
 
 	struct iaddr requested_address;	    /* Address we would like to get. */
 
 	struct client_config *config;	    /* Information from config file. */
 
 	char **scriptEnv;  /* Client script env */
-	int scriptEnvsize; /* size of the env table */
+	size_t scriptEnvsize; /* size of the env table */
 
 	struct string_list *env;	       /* Client script environment. */
-	int envc;			/* Number of entries in environment. */
+	size_t envc;			/* Number of entries in environment. */
 };
 
 /* Information about each network interface. */
@@ -495,6 +495,19 @@ int	debug(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int	parse_warn(const char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* dhcpd.c */
+extern int gotpipe;
+extern pid_t pfproc_pid;
+extern char *path_dhcpd_conf;
+extern char *path_dhcpd_db;
+extern char *abandoned_tab;
+extern char *changedmac_tab;
+extern char *leased_tab;
+extern time_t cur_time, last_scan;
+extern struct passwd *pw;
+extern int pfpipe[2];
+extern int syncrecv;
+extern int syncsend;
+
 extern time_t		cur_time;
 extern struct group	root_group;
 
@@ -539,6 +552,7 @@ void	 parse_lease_time(FILE *, time_t *);
 void	 parse_shared_net_declaration(FILE *, struct group *);
 void	 parse_subnet_declaration(FILE *, struct shared_network *);
 void	 parse_group_declaration(FILE *, struct group *);
+int 	parse_cidr(FILE *, unsigned char *, unsigned char *);
 void	 parse_hardware_param(FILE *, struct hardware *);
 char	*parse_string(FILE *);
 
@@ -598,7 +612,7 @@ void enter_subnet(struct subnet *);
 void enter_lease(struct lease *);
 int supersede_lease(struct lease *, struct lease *, int);
 void release_lease(struct lease *);
-void abandon_lease(struct lease *, char *);
+void abandon_lease(struct lease *, const char *);
 struct lease *find_lease_by_uid(unsigned char *, int);
 struct lease *find_lease_by_hw_addr(unsigned char *, int);
 struct lease *find_lease_by_ip_addr(struct iaddr);
@@ -608,13 +622,13 @@ void hw_hash_add(struct lease *);
 void hw_hash_delete(struct lease *);
 struct class *add_class(int, char *);
 struct class *find_class(int, unsigned char *, int);
-struct group *clone_group(struct group *, char *);
+struct group *clone_group(struct group *, const char *);
 void write_leases(void);
 
 /* alloc.c */
-struct tree_cache *new_tree_cache(char *);
-struct lease_state *new_lease_state(char *);
-void free_lease_state(struct lease_state *, char *);
+struct tree_cache *new_tree_cache(const char *);
+struct lease_state *new_lease_state(const char *);
+void free_lease_state(struct lease_state *, const char *);
 void free_tree_cache(struct tree_cache *);
 
 /* print.c */
@@ -644,7 +658,7 @@ void remove_protocol(struct protocol *);
 struct hash_table *new_hash(void);
 void add_hash(struct hash_table *, unsigned char *, int, unsigned char *);
 void delete_hash_entry(struct hash_table *, unsigned char *, int);
-unsigned char *hash_lookup(struct hash_table *, unsigned char *, int);
+void *hash_lookup(struct hash_table *, unsigned char *, int);
 
 /* tables.c */
 extern struct option dhcp_options[256];
@@ -672,6 +686,9 @@ int addr_eq(struct iaddr, struct iaddr);
 char *piaddr(struct iaddr);
 
 /* db.c */
+extern FILE *db_file;
+extern time_t write_time;
+
 int write_lease(struct lease *);
 int commit_leases(void);
 void db_startup(void);

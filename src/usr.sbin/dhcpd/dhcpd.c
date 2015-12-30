@@ -61,14 +61,11 @@ int gotpipe = 0;
 int syncrecv;
 int syncsend;
 pid_t pfproc_pid = -1;
-char *path_dhcpd_conf = _PATH_DHCPD_CONF;
-char *path_dhcpd_db = _PATH_DHCPD_DB;
+char *path_dhcpd_conf = (char *)_PATH_DHCPD_CONF;
+char *path_dhcpd_db = (char *)_PATH_DHCPD_DB;
 char *abandoned_tab = NULL;
 char *changedmac_tab = NULL;
 char *leased_tab = NULL;
-#ifndef __FreeBSD__
-	struct syslog_data sdata = SYSLOG_DATA_INIT;
-#endif
 
 int
 main(int argc, char *argv[])
@@ -82,9 +79,6 @@ main(int argc, char *argv[])
 	struct in_addr udpaddr;
 
 	/* Initially, log errors to stderr as well as to syslogd. */
-#ifndef __FreeBSD__
-	openlog_r(__progname, LOG_PID | LOG_NDELAY, DHCPD_LOG_FACILITY, &sdata);
-#endif
 
 	opterr = 0;
 	while ((ch = getopt(argc, argv, "A:C:L:c:dfl:nu::Y:y:")) != -1)
@@ -186,14 +180,10 @@ main(int argc, char *argv[])
 	db_startup();
 	if (!udpsockmode || argc > 0)
 		discover_interfaces(&rdomain);
-	if (rdomain != -1)
-#ifdef __FreeBSD__
+	if (rdomain != -1) {
 		if (setfib(rdomain) == -1)
 			error("setfib (%m)");
-#else
-		if (setrtable(rdomain) == -1)
-			error("setrtable (%m)");
-#endif
+	}
 	if (udpsockmode)
 		udpsock_startup(udpaddr);
 	icmp_startup(1, lease_pinged);
@@ -233,13 +223,10 @@ main(int argc, char *argv[])
 			break;
 		}
 	}
-#ifdef __FreeBSD__
+
 	if (chroot("/var/empty") == -1)
 		error("chroot %s: %m", "/var/empty");
-#else
-	if (chroot(_PATH_VAREMPTY) == -1)
-		error("chroot %s: %m", _PATH_VAREMPTY);
-#endif
+
 	if (chdir("/") == -1)
 		error("chdir(\"/\"): %m");
 	if (setgroups(1, &pw->pw_gid) ||
@@ -268,7 +255,7 @@ usage(void)
 }
 
 void
-lease_pinged(struct iaddr from, u_int8_t *packet, int length)
+lease_pinged(struct iaddr from, u_int8_t *packet __unused, int length __unused)
 {
 	struct lease *lp;
 
@@ -336,7 +323,7 @@ extern struct subnet *subnets;
 #define MINIMUM(a,b) (((a)<(b))?(a):(b))
 
 void
-periodic_scan(void *p)
+periodic_scan(void *p __unused)
 {
 	time_t x, y;
 	struct subnet		*n;

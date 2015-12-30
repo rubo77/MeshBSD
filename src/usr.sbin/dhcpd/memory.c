@@ -637,7 +637,7 @@ release_lease(struct lease *lease)
  * appropriate. abandons permanently if abtime is 0
  */
 void
-abandon_lease(struct lease *lease, char *message)
+abandon_lease(struct lease *lease, const char *message)
 {
 	struct lease lt;
 	time_t abtime;
@@ -835,7 +835,7 @@ find_class(int type, unsigned char *name, int len)
 }
 
 struct group *
-clone_group(struct group *group, char *caller)
+clone_group(struct group *group, const char *caller)
 {
 	struct group *g;
 

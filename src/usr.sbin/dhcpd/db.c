@@ -59,7 +59,7 @@ write_lease(struct lease *lease)
 	char tbuf[26];	/* "w yyyy/mm/dd hh:mm:ss UTC" */
 	size_t rsltsz;
 	int errors = 0;
-	int i;
+	size_t i;
 
 	if (counting)
 		++count;
@@ -86,7 +86,7 @@ write_lease(struct lease *lease)
 	}
 
 	if (lease->uid_len) {
-		int j;
+		size_t j;
 
 		if (fprintf(db_file, "\n\tuid %2.2x", lease->uid[0]) == -1)
 			++errors;

@@ -223,18 +223,12 @@ sync_init(const char *iface, const char *baddr, u_short port)
 		goto fail;
 	}
 
-	if (sync_debug)
-#ifdef __FreeBSD__
+	if (sync_debug) {
 		syslog(LOG_DEBUG, "using multicast dhcp sync %smode "
 			"(ttl %u, group %s, port %d)\n",
 			sendmcast ? "" : "receive ",
 			ttl, inet_ntoa(sync_out.sin_addr), port);
-#else
-		syslog_r(LOG_DEBUG, &sdata, "using multicast dhcp sync %smode "
-		    "(ttl %u, group %s, port %d)\n",
-		    sendmcast ? "" : "receive ",
-		    ttl, inet_ntoa(sync_out.sin_addr), port);
-#endif
+	}
 
 	return (syncfd);
 

@@ -45,7 +45,7 @@ extern char *abandoned_tab;
 extern char *changedmac_tab;
 extern char *leased_tab;
 
-__dead void
+void
 pftable_handler()
 {
 	struct pf_cmd cmd;
@@ -54,15 +54,13 @@ pftable_handler()
 
 	if ((fd = open(_PATH_DEV_PF, O_RDWR|O_NOFOLLOW, 0660)) == -1)
 		error("can't open pf device: %m");
-#ifdef __FreeBSD__
+
 	if (chroot("/var/empty") == -1)
 		error("chroot %s: %m", "/var/empty");
-#else
-	 if (chroot(_PATH_VAREMPTY) == -1)
-		error("chroot %s: %m", _PATH_VAREMPTY);
-#endif
+
 	if (chdir("/") == -1)
 		error("chdir(\"/\"): %m");
+		
 	if (setgroups(1, &pw->pw_gid) ||
 	    setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) ||
 	    setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid))

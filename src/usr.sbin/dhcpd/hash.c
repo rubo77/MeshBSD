@@ -131,7 +131,7 @@ delete_hash_entry(struct hash_table *table, unsigned char *name, int len)
 	}
 }
 
-unsigned char *
+void *
 hash_lookup(struct hash_table *table, unsigned char *name, int len)
 {
 	int hashno;

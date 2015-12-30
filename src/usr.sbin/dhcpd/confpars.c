@@ -641,7 +641,7 @@ void parse_shared_net_declaration(cfile, group)
 
 		if (val[0] == 0) {
 			parse_warn("zero-length shared network name");
-			val = "<no-name-given>";
+			val = (char *)"<no-name-given>";
 		}
 		name = strdup(val);
 		if (name == NULL)

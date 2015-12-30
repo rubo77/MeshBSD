@@ -1703,7 +1703,7 @@ db_conflict:
  * lease structure for it; otherwise return the null pointer.
  */
 struct lease *
-mockup_lease(struct packet *packet, struct shared_network *share,
+mockup_lease(struct packet *packet __unused, struct shared_network *share,
     struct host_decl *hp)
 {
 	static struct lease mock;
