@@ -977,11 +977,14 @@ ack_lease(struct packet *packet, struct lease *lease, unsigned int offer,
 	   was sent. */
 	i = DHO_DHCP_MAX_MESSAGE_SIZE;
 	if (packet->options[i].data &&
-	    packet->options[i].len == sizeof(u_int16_t))
-		state->max_message_size = get_u_hort(packet->options[i].data);
+	    packet->options[i].len == sizeof(u_int16_t)) {
+		state->max_message_size = 
+			get_u_short(packet->options[i].data);
 	/* Otherwise, if a maximum message size was specified, use that. */
-	else if (state->options[i] && state->options[i]->value)
-		state->max_message_size = getUShort(state->options[i]->value);
+	} else if (state->options[i] && state->options[i]->value) {
+		state->max_message_size = 
+			get_u_short(state->options[i]->value);
+	}
 
 	/* Save the parameter request list if there is one. */
 	i = DHO_DHCP_PARAMETER_REQUEST_LIST;
@@ -1471,7 +1474,8 @@ find_lease(struct packet *packet, struct shared_network *share,
 	   any other lease, so we might as well return now. */
 	if (packet->packet_type == DHCPREQUEST && fixed_lease &&
 	    (fixed_lease->ip_addr.len != cip.len ||
-	    (void)memcmp(fixed_lease->ip_addr.iabuf, cip.iabuf, cip.len))) {
+	    	memcmp(fixed_lease->ip_addr.iabuf, 
+	    	cip.iabuf, cip.len))) {
 		if (ours)
 			*ours = 1;
 		(void)strlcpy(dhcp_message, "requested address is incorrect",

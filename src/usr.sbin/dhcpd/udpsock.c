@@ -47,7 +47,7 @@ udpsock_startup(struct in_addr bindaddr)
 	if ((udpsock = calloc(1, sizeof(struct udpsock))) == NULL)
 		error("could not create udpsock: %s", strerror(errno));
 
-	memset(&sin4, 0, sizeof(sin4));
+	(void)memset(&sin4, 0, sizeof(sin4));
 	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		error("creating a socket failed for udp: %s", strerror(errno));
 
@@ -64,8 +64,11 @@ udpsock_startup(struct in_addr bindaddr)
 	if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) != 0)
 		error("bind failed for udp: %s", strerror(errno));
 
-	add_protocol("udp", sock, udpsock_handler, (void *)(intptr_t)udpsock);
-	note("Listening on %s:%d/udp.", inet_ntoa(sin4.sin_addr),
+	add_protocol("udp", sock, udpsock_handler, 
+		(void *)(intptr_t)udpsock);
+	
+	(void)note("Listening on %s:%d/udp.", 
+		inet_ntoa(sin4.sin_addr),
 	    ntohs(server_port));
 
 	udpsock->sock = sock;
@@ -92,11 +95,13 @@ udpsock_handler(struct protocol *protocol)
 	struct ifreq		 ifr;
 	struct subnet		*subnet;
 
-	memset(&hw, 0, sizeof(hw));
+	(void)memset(&hw, 0, sizeof(hw));
 
 	iov[0].iov_base = packetbuf;
 	iov[0].iov_len = sizeof(packetbuf);
-	memset(&m, 0, sizeof(m));
+	
+	(void)memset(&m, 0, sizeof(m));
+	
 	m.msg_name = &ss;
 	m.msg_namelen = sizeof(ss);
 	m.msg_iov = iov;
@@ -104,13 +109,16 @@ udpsock_handler(struct protocol *protocol)
 	m.msg_control = cbuf;
 	m.msg_controllen = sizeof(cbuf);
 
-	memset(&iface, 0, sizeof(iface));
+	(void)memset(&iface, 0, sizeof(iface));
 	if ((len = recvmsg(udpsock->sock, &m, 0)) < 0) {
-		warning("receiving a DHCP message failed: %s", strerror(errno));
+		(void)warning("receiving a DHCP "
+			"message failed: %s", 
+			strerror(errno));
 		return;
 	}
 	if (ss.ss_family != AF_INET) {
-		warning("received DHCP message is not AF_INET");
+		(void)warning("received DHCP "
+			"message is not AF_INET");
 		return;
 	}
 	sin4 = (struct sockaddr_in *)&ss;
@@ -122,23 +130,26 @@ udpsock_handler(struct protocol *protocol)
 			sdl = (struct sockaddr_dl *)CMSG_DATA(cm);
 	}
 	if (sdl == NULL) {
-		warning("could not get the received interface by IP_RECVIF");
+		(void)warning("could not get the received "
+			"interface by IP_RECVIF");
 		return;
 	}
 	if_indextoname(sdl->sdl_index, ifname);
 
 	if ((sockio = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		warning("socket creation failed: %s", strerror(errno));
+		(void)warning("socket creation "
+			"failed: %s", strerror(errno));
 		return;
 	}
 	strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
 	if (ioctl(sockio, SIOCGIFADDR, &ifr, sizeof(ifr)) != 0) {
-		warning("Failed to get address for %s: %s", ifname,
+		(void)warning("Failed to get "
+			"address for %s: %s", ifname,
 		    strerror(errno));
-		close(sockio);
+		(void)close(sockio);
 		return;
 	}
-	close(sockio);
+	(void)close(sockio);
 
 	if (ifr.ifr_addr.sa_family != AF_INET)
 		return;
@@ -148,17 +159,20 @@ udpsock_handler(struct protocol *protocol)
 	iface.wfdesc = udpsock->sock;
 	iface.ifp = &ifr;
 	iface.index = sdl->sdl_index;
-	iface.primary_address = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
-	strlcpy(iface.name, ifname, sizeof(iface.name));
+	iface.primary_address = 
+		((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
+	(void)strlcpy(iface.name, ifname, sizeof(iface.name));
 
 	addr.len = 4;
-	memcpy(&addr.iabuf, &iface.primary_address, addr.len);
+	(void)memcpy(&addr.iabuf, &iface.primary_address, addr.len);
 
 	if ((subnet = find_subnet(addr)) == NULL)
 		return;
 	iface.shared_network = subnet->shared_network ;
 	from.len = 4;
-	memcpy(&from.iabuf, &sin4->sin_addr, from.len);
+	
+	(void)memcpy(&from.iabuf, &sin4->sin_addr, from.len);
+	
 	do_packet(&iface, packet, len, sin4->sin_port, from, &hw);
 }
 

@@ -146,20 +146,20 @@ pf_change_table(int fd, int op, struct in_addr ip, char *table)
 		return;
 
 	bzero(&io, sizeof(io));
-	strlcpy(io.pfrio_table.pfrt_name, table,
+	(void)strlcpy(io.pfrio_table.pfrt_name, table,
 	    sizeof(io.pfrio_table.pfrt_name));
 	io.pfrio_buffer = &addr;
 	io.pfrio_esize = sizeof(addr);
 	io.pfrio_size = 1;
 
 	bzero(&addr, sizeof(addr));
-	memcpy(&addr.pfra_ip4addr, &ip, 4);
+	(void)memcpy(&addr.pfra_ip4addr, &ip, 4);
 	addr.pfra_af = AF_INET;
 	addr.pfra_net = 32;
 
 	if (ioctl(fd, op ? DIOCRADDADDRS : DIOCRDELADDRS, &io) &&
 	    errno != ESRCH) {
-		warning( "DIOCR%sADDRS on table %s: %s",
+		(void)warning( "DIOCR%sADDRS on table %s: %s",
 		    op ? "ADD" : "DEL", table, strerror(errno));
 	}
 }
@@ -173,13 +173,13 @@ pf_kill_state(int fd, struct in_addr ip)
 	bzero(&psk, sizeof(psk));
 	bzero(&target, sizeof(target));
 
-	memcpy(&target.v4, &ip.s_addr, 4);
+	(void)memcpy(&target.v4, &ip.s_addr, 4);
 	psk.psk_af = AF_INET;
 
 	/* Kill all states from target */
-	memcpy(&psk.psk_src.addr.v.a.addr, &target,
+	(void)memcpy(&psk.psk_src.addr.v.a.addr, &target,
 	    sizeof(psk.psk_src.addr.v.a.addr));
-	memset(&psk.psk_src.addr.v.a.mask, 0xff,
+	(void)memset(&psk.psk_src.addr.v.a.mask, 0xff,
 	    sizeof(psk.psk_src.addr.v.a.mask));
 	if (ioctl(fd, DIOCKILLSTATES, &psk)) {
 		warning("DIOCKILLSTATES failed (%s)", strerror(errno));
@@ -187,9 +187,9 @@ pf_kill_state(int fd, struct in_addr ip)
 
 	/* Kill all states to target */
 	bzero(&psk.psk_src, sizeof(psk.psk_src));
-	memcpy(&psk.psk_dst.addr.v.a.addr, &target,
+	(void)memcpy(&psk.psk_dst.addr.v.a.addr, &target,
 	    sizeof(psk.psk_dst.addr.v.a.addr));
-	memset(&psk.psk_dst.addr.v.a.mask, 0xff,
+	(void)memset(&psk.psk_dst.addr.v.a.mask, 0xff,
 	    sizeof(psk.psk_dst.addr.v.a.mask));
 	if (ioctl(fd, DIOCKILLSTATES, &psk)) {
 		warning("DIOCKILLSTATES failed (%s)", strerror(errno));
@@ -210,10 +210,10 @@ atomicio(ssize_t (*f) (int, void *, size_t), int fd, void *_s, size_t n)
 		case -1:
 			if (errno == EINTR || errno == EAGAIN)
 				continue;
-			return 0;
+			return (0);
 		case 0:
 			errno = EPIPE;
-			return pos;
+			return (pos);
 		default:
 			pos += (size_t)res;
 		}
@@ -236,7 +236,7 @@ pfmsg(char c, struct lease *lp)
 		return;
 
 	cmd.type = c;
-	memcpy(&cmd.ip.s_addr, lp->ip_addr.iabuf, 4);
+	(void)memcpy(&cmd.ip.s_addr, lp->ip_addr.iabuf, 4);
 
 	switch (c) {
 	case 'A': /* address is being abandoned */

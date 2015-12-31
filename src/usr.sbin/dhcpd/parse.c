@@ -103,7 +103,7 @@ parse_semi(FILE *cfile)
 
 	token = next_token(&val, cfile);
 	if (token != ';') {
-		parse_warn("semicolon expected.");
+		(void)parse_warn("semicolon expected.");
 		skip_to_semi(cfile);
 		return (0);
 	}
@@ -121,7 +121,7 @@ parse_string(FILE *cfile)
 
 	token = next_token(&val, cfile);
 	if (token != TOK_STRING) {
-		parse_warn("filename must be a string");
+		(void)parse_warn("filename must be a string");
 		skip_to_semi(cfile);
 		return (NULL);
 	}
@@ -151,7 +151,7 @@ parse_host_name(FILE *cfile)
 		/* Read a token, which should be an identifier. */
 		token = next_token(&val, cfile);
 		if (!is_identifier(token)) {
-			parse_warn("expecting an identifier in hostname");
+			(void)parse_warn("expecting an identifier in hostname");
 			skip_to_semi(cfile);
 			return (NULL);
 		}
@@ -180,7 +180,9 @@ parse_host_name(FILE *cfile)
 		int l = strlen((char *)c->car);
 
 		t -= l;
-		memcpy(t, (char *)c->car, l);
+		
+		(void)memcpy(t, (char *)c->car, l);
+		
 		/* Free up temp space. */
 		free(c->car);
 		free(c);
@@ -212,7 +214,7 @@ parse_hardware_param(FILE *cfile, struct hardware *hardware)
 		hardware->htype = HTYPE_IPSEC_TUNNEL;
 		break;
 	default:
-		parse_warn("expecting a network hardware type");
+		(void)parse_warn("expecting a network hardware type");
 		skip_to_semi(cfile);
 		return;
 	}
@@ -232,19 +234,20 @@ parse_hardware_param(FILE *cfile, struct hardware *hardware)
 		return;
 	if (hlen > sizeof(hardware->haddr)) {
 		free(t);
-		parse_warn("hardware address too long");
+		(void)parse_warn("hardware address too long");
 	} else {
 		hardware->hlen = hlen;
-		memcpy((unsigned char *)&hardware->haddr[0], t, hardware->hlen);
+		(void)memcpy((unsigned char *)&hardware->haddr[0], 
+			t, hardware->hlen);
 		if (hlen < sizeof(hardware->haddr))
-			memset(&hardware->haddr[hlen], 0,
+			(void)memset(&hardware->haddr[hlen], 0,
 			    sizeof(hardware->haddr) - hlen);
 		free(t);
 	}
 
 	token = next_token(&val, cfile);
 	if (token != ';') {
-		parse_warn("expecting semicolon.");
+		(void)parse_warn("expecting semicolon.");
 		skip_to_semi(cfile);
 	}
 }
@@ -264,7 +267,7 @@ parse_lease_time(FILE *cfile, time_t *timep __unused)
 
 	value = strtonum(val, 0, UINT32_MAX, &errstr);
 	if (errstr) {
-		parse_warn("lease time is %s: %s", errstr, val);
+		(void)parse_warn("lease time is %s: %s", errstr, val);
 		skip_to_semi(cfile);
 		return;
 	}
@@ -304,7 +307,7 @@ parse_numeric_aggregate(FILE *cfile, unsigned char *buf, int *max,
 					break;
 				if (token != '{' && token != '}')
 					token = next_token(&val, cfile);
-				parse_warn("too few numbers.");
+				(void)parse_warn("too few numbers.");
 				if (token != ';')
 					skip_to_semi(cfile);
 				return (NULL);
@@ -314,11 +317,11 @@ parse_numeric_aggregate(FILE *cfile, unsigned char *buf, int *max,
 		token = next_token(&val, cfile);
 
 		if (token == EOF) {
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		}
 		if (token != TOK_NUMBER && token != TOK_NUMBER_OR_NAME) {
-			parse_warn("expecting numeric value.");
+			(void)parse_warn("expecting numeric value.");
 			skip_to_semi(cfile);
 			return (NULL);
 		}
@@ -394,11 +397,11 @@ convert_num(unsigned char *buf, char *str, int base, int size)
 		else if (tval >= '0')
 			tval -= '0';
 		else {
-			warning("Bogus number: %s.", str);
+			(void)warning("Bogus number: %s.", str);
 			break;
 		}
 		if (tval >= base) {
-			warning("Bogus number: %s: digit %d not in base %d",
+			(void)warning("Bogus number: %s: digit %d not in base %d",
 			    str, tval, base);
 			break;
 		}
@@ -412,15 +415,18 @@ convert_num(unsigned char *buf, char *str, int base, int size)
 	if (val > max) {
 		switch (base) {
 		case 8:
-			warning("value %s%o exceeds max (%d) for precision.",
+			(void)warning("value %s%o exceeds "
+				"max (%d) for precision.",
 			    negative ? "-" : "", val, max);
 			break;
 		case 16:
-			warning("value %s%x exceeds max (%d) for precision.",
+			(void)warning("value %s%x exceeds "
+				"max (%d) for precision.",
 			    negative ? "-" : "", val, max);
 			break;
 		default:
-			warning("value %s%u exceeds max (%d) for precision.",
+			(void)warning("value %s%u exceeds "
+				"max (%d) for precision.",
 			    negative ? "-" : "", val, max);
 			break;
 		}
@@ -432,13 +438,13 @@ convert_num(unsigned char *buf, char *str, int base, int size)
 			*buf = -(unsigned long)val;
 			break;
 		case 16:
-			putShort(buf, -(unsigned long)val);
+			put_short(buf, -(unsigned long)val);
 			break;
 		case 32:
-			putLong(buf, -(unsigned long)val);
+			put_long(buf, -(unsigned long)val);
 			break;
 		default:
-			warning("Unexpected integer size: %d", size);
+			(void)warning("Unexpected integer size: %d", size);
 			break;
 		}
 	} else {
@@ -447,13 +453,13 @@ convert_num(unsigned char *buf, char *str, int base, int size)
 			*buf = (u_int8_t)val;
 			break;
 		case 16:
-			putUShort(buf, (u_int16_t)val);
+			put_u_short(buf, (u_int16_t)val);
 			break;
 		case 32:
-			putULong(buf, val);
+			put_u_long(buf, val);
 			break;
 		default:
-			warning("Unexpected integer size: %d", size);
+			(void)warning("Unexpected integer size: %d", size);
 			break;
 		}
 	}
@@ -491,7 +497,7 @@ parse_date(FILE *cfile)
 			n = strlcat(timestr, val, sizeof(timestr));
 			if (n >= sizeof(timestr)) {
 				/* XXX Will break after year 9999! */
-				parse_warn("time string too long");
+				(void)parse_warn("time string too long");
 				skip_to_semi(cfile);
 				return (0);
 			}
@@ -499,7 +505,7 @@ parse_date(FILE *cfile)
 		case';':
 			break;
 		default:
-			parse_warn("invalid time string");
+			(void)parse_warn("invalid time string");
 			skip_to_semi(cfile);
 			return (0);
 		}
@@ -507,19 +513,19 @@ parse_date(FILE *cfile)
 
 	parse_semi(cfile);
 
-	memset(&tm, 0, sizeof(tm));	/* 'cuz strptime ignores tm_isdt. */
+	(void)memset(&tm, 0, sizeof(tm));	/* 'cuz strptime ignores tm_isdt. */
 	p = strptime(timestr, DB_TIMEFMT, &tm);
 	if (p == NULL || *p != '\0') {
 		p = strptime(timestr, OLD_DB_TIMEFMT, &tm);
 		if (p == NULL || *p != '\0') {
-			parse_warn("unparseable time string");
+			(void)parse_warn("unparseable time string");
 			return (0);
 		}
 	}
 
 	guess = timegm(&tm);
 	if (guess == -1) {
-		parse_warn("time could not be represented");
+		(void)parse_warn("time could not be represented");
 		return (0);
 	}
 

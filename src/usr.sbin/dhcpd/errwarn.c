@@ -47,7 +47,7 @@
 
 #include "dhcpd.h"
 
-static void do_percentm(char *obuf, size_t size, const char *ibuf);
+static void 	do_percentm(char *obuf, size_t size, const char *ibuf);
 
 static char mbuf[1024];
 static char fbuf[1024];

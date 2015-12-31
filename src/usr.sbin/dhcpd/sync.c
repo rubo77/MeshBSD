@@ -65,7 +65,7 @@ struct sync_host {
 };
 LIST_HEAD(synchosts, sync_host) sync_hosts = LIST_HEAD_INITIALIZER(sync_hosts);
 
-void	 sync_send(struct iovec *, int);
+void 	sync_send(struct iovec *, int);
 
 int
 sync_addhost(const char *name, u_short port)
@@ -104,14 +104,18 @@ sync_addhost(const char *name, u_short port)
 	shost->sh_addr.sin_family = AF_INET;
 	shost->sh_addr.sin_port = htons(port);
 	shost->sh_addr.sin_addr.s_addr = addr->sin_addr.s_addr;
+	
 	freeaddrinfo(res0);
 
 	LIST_INSERT_HEAD(&sync_hosts, shost, h_entry);
 
-	if (sync_debug)
-		note("added dhcp sync host %s (address %s, port %d)\n",
-		    shost->h_name, inet_ntoa(shost->sh_addr.sin_addr), port);
-
+	if (sync_debug) {
+		(void)note("added dhcp sync host %s "
+			"(address %s, port %d)\n",
+		    shost->h_name, 
+		    inet_ntoa(shost->sh_addr.sin_addr), 
+		    port);
+	}
 	return (0);
 }
 
@@ -136,8 +140,10 @@ sync_init(const char *iface, const char *baddr, u_short port)
 			ina.s_addr = htonl(INADDR_ANY);
 			if (iface == NULL)
 				iface = baddr;
-			else if (iface != NULL && strcmp(baddr, iface) != 0) {
-				fprintf(stderr, "multicast interface does "
+			else if (iface != NULL 
+				&& strcmp(baddr, iface) != 0) {
+				(void)fprintf(stderr, "multicast "
+					"interface does "
 				    "not match");
 				return (-1);
 			}
@@ -179,20 +185,22 @@ sync_init(const char *iface, const char *baddr, u_short port)
 	if (iface == NULL)
 		return (syncfd);
 
-	strlcpy(ifnam, iface, sizeof(ifnam));
+	(void)strlcpy(ifnam, iface, sizeof(ifnam));
+	
 	ttl = DHCP_SYNC_MCASTTTL;
 	if ((ttlstr = strchr(ifnam, ':')) != NULL) {
 		*ttlstr++ = '\0';
 		ttl = (u_int8_t)strtonum(ttlstr, 1, UINT8_MAX, &errstr);
 		if (errstr) {
-			fprintf(stderr, "invalid multicast ttl %s: %s",
+			(void)fprintf(stderr, "invalid "
+				"multicast ttl %s: %s",
 			    ttlstr, errstr);
 			goto fail;
 		}
 	}
 
 	bzero(&ifr, sizeof(ifr));
-	strlcpy(ifr.ifr_name, ifnam, sizeof(ifr.ifr_name));
+	(void)strlcpy(ifr.ifr_name, ifnam, sizeof(ifr.ifr_name));
 	if (ioctl(syncfd, SIOCGIFADDR, &ifr) == -1)
 		goto fail;
 
@@ -210,15 +218,18 @@ sync_init(const char *iface, const char *baddr, u_short port)
 
 	if (setsockopt(syncfd, IPPROTO_IP,
 	    IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) == -1) {
-		fprintf(stderr, "failed to add multicast membership to %s: %s",
-		    DHCP_SYNC_MCASTADDR, strerror(errno));
+		(void)fprintf(stderr, "failed to add multicast "
+			"membership to %s: %s",
+		    DHCP_SYNC_MCASTADDR, 
+		    strerror(errno));
 		goto fail;
 	}
 	if (setsockopt(syncfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
 	    sizeof(ttl)) == -1) {
-		fprintf(stderr, "failed to set multicast ttl to "
-		    "%u: %s\n", ttl, strerror(errno));
-		setsockopt(syncfd, IPPROTO_IP,
+		(void)fprintf(stderr, "failed to set "
+			"multicast ttl to %u: %s\n", ttl, 
+				strerror(errno));
+		(void)setsockopt(syncfd, IPPROTO_IP,
 		    IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
 		goto fail;
 	}
@@ -229,12 +240,12 @@ sync_init(const char *iface, const char *baddr, u_short port)
 			sendmcast ? "" : "receive ",
 			ttl, inet_ntoa(sync_out.sin_addr), port);
 	}
-
+out:
 	return (syncfd);
-
- fail:
+fail:
 	close(syncfd);
-	return (-1);
+	syncfd = -1;
+	goto out;
 }
 
 void
@@ -275,7 +286,7 @@ sync_recv(void)
 	len = ntohs(hdr->sh_length);
 
 	/* Compute and validate HMAC */
-	memcpy(hmac[0], hdr->sh_hmac, DHCP_SYNC_HMAC_LEN);
+	(void)memcpy(hmac[0], hdr->sh_hmac, DHCP_SYNC_HMAC_LEN);
 	bzero(hdr->sh_hmac, DHCP_SYNC_HMAC_LEN);
 	HMAC(EVP_sha1(), sync_key, strlen(sync_key), buf, len,
 	    hmac[1], &hmac_len);
@@ -306,15 +317,18 @@ sync_recv(void)
 				lease = find_lease_by_ip_addr(lv->lv_ip_addr);
 
 			lp = &l;
-			memset(lp, 0, sizeof(*lp));
+			
+			(void)memset(lp, 0, sizeof(*lp));
+			
 			lp->timestamp = ntohl(lv->lv_timestamp);
 			lp->starts = ntohl(lv->lv_starts);
 			lp->ends = ntohl(lv->lv_ends);
-			memcpy(&lp->ip_addr, &lv->lv_ip_addr,
+			
+			(void)memcpy(&lp->ip_addr, &lv->lv_ip_addr,
 			    sizeof(lp->ip_addr));
-			memcpy(&lp->hardware_addr, &lv->lv_hardware_addr,
+			(void)memcpy(&lp->hardware_addr, &lv->lv_hardware_addr,
 			    sizeof(lp->hardware_addr));
-			note("DHCP_SYNC_LEASE from %s for hw %s -> ip %s, "
+			(void)note("DHCP_SYNC_LEASE from %s for hw %s -> ip %s, "
 			    "start %lld, end %lld",
 			    inet_ntoa(addr.sin_addr),
 			    print_hw_addr(lp->hardware_addr.htype,
@@ -327,7 +341,7 @@ sync_recv(void)
 				write_leases();
 			}
 			else if (lease->ends < lp->ends)
-				supersede_lease(lease, lp, 1);
+				(void)supersede_lease(lease, lp, 1);
 			else if (lease->ends > lp->ends)
 				/*
 				 * our partner sent us a lease
@@ -432,13 +446,19 @@ sync_lease(struct lease *lease)
 	lv.lv_timestamp = htonl(lease->timestamp);
 	lv.lv_starts = htonl(lease->starts);
 	lv.lv_ends =  htonl(lease->ends);
-	memcpy(&lv.lv_ip_addr, &lease->ip_addr, sizeof(lv.lv_ip_addr));
-	memcpy(&lv.lv_hardware_addr, &lease->hardware_addr,
+	(void)memcpy(&lv.lv_ip_addr, &lease->ip_addr, 
+		sizeof(lv.lv_ip_addr));
+	(void)memcpy(&lv.lv_hardware_addr, &lease->hardware_addr,
 	    sizeof(lv.lv_hardware_addr));
-	note("sending DHCP_SYNC_LEASE for hw %s -> ip %s, start %d, end %d",
-	    print_hw_addr(lv.lv_hardware_addr.htype, lv.lv_hardware_addr.hlen,
-	    lv.lv_hardware_addr.haddr), piaddr(lease->ip_addr),
-	    ntohl(lv.lv_starts), ntohl(lv.lv_ends));
+	(void)note("sending DHCP_SYNC_LEASE for "
+		"hw %s -> ip %s, start %d, end %d",
+	    print_hw_addr(lv.lv_hardware_addr.htype, 
+	    lv.lv_hardware_addr.hlen,
+	    lv.lv_hardware_addr.haddr), 
+	    piaddr(lease->ip_addr),
+	    ntohl(lv.lv_starts), 
+	    ntohl(lv.lv_ends));
+	    
 	iov[i].iov_base = &lv;
 	iov[i].iov_len = sizeof(lv);
 	HMAC_Update(&ctx, iov[i].iov_base, iov[i].iov_len);

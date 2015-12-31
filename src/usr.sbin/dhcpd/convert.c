@@ -46,7 +46,7 @@
 #include "dhcpd.h"
 
 u_int32_t
-get_u_ong(unsigned char *buf)
+get_u_long(unsigned char *buf)
 {
 	u_int32_t ibuf;
 

@@ -48,7 +48,8 @@ static int icmp_protocol_fd;
 /* Initialize the ICMP protocol. */
 
 void
-icmp_startup(int routep, void (*handler)(struct iaddr, u_int8_t *, int))
+icmp_startup(int routep __unused, 
+	void (*handler)(struct iaddr, u_int8_t *, int))
 {
 	struct protoent *proto;
 	int protocol = 1, state;
@@ -88,7 +89,7 @@ icmp_echorequest(struct iaddr *addr)
 	bzero(&to, sizeof(to));
 	to.sin_len = sizeof to;
 	to.sin_family = AF_INET;
-	memcpy(&to.sin_addr, addr->iabuf, sizeof to.sin_addr);	/* XXX */
+	(void)memcpy(&to.sin_addr, addr->iabuf, sizeof to.sin_addr);	/* XXX */
 
 	icmp.icmp_type = ICMP_ECHO;
 	icmp.icmp_code = 0;
@@ -105,7 +106,7 @@ icmp_echorequest(struct iaddr *addr)
 	if (status == -1)
 		warning("icmp_echorequest %s: %m", inet_ntoa(to.sin_addr));
 
-	if (status != sizeof icmp)
+	if (status != sizeof(icmp))
 		return 0;
 	return 1;
 }
@@ -121,7 +122,7 @@ icmp_echoreply(struct protocol *protocol)
 	socklen_t salen;
 	struct iaddr ia;
 
-	salen = sizeof from;
+	salen = sizeof(from);
 	status = recvfrom(protocol->fd, icbuf, sizeof(icbuf), 0,
 	    (struct sockaddr *)&from, &salen);
 	if (status == -1) {
@@ -144,8 +145,8 @@ icmp_echoreply(struct protocol *protocol)
 	if (protocol->local) {
 		handler = ((void (*)(struct iaddr, u_int8_t *, int))
 		    protocol->local);
-		memcpy(ia.iabuf, &from.sin_addr, sizeof from.sin_addr);
-		ia.len = sizeof from.sin_addr;
+		(void)memcpy(ia.iabuf, &from.sin_addr, sizeof(from.sin_addr));
+		ia.len = sizeof(from.sin_addr);
 		(*handler)(ia, icbuf, len);
 	}
 }

@@ -157,7 +157,7 @@ main(int argc, char *argv[])
 		struct interface_info *tmp = calloc(1, sizeof(*tmp));
 		if (!tmp)
 			error("calloc");
-		strlcpy(tmp->name, argv[0], sizeof(tmp->name));
+		(void)strlcpy(tmp->name, argv[0], sizeof(tmp->name));
 		tmp->next = interfaces;
 		interfaces = tmp;
 		argc--;
@@ -170,7 +170,7 @@ main(int argc, char *argv[])
 
 	tzset();
 
-	time(&cur_time);
+	(void)time(&cur_time);
 	if (!readconf())
 		error("Configuration file errors encountered");
 
@@ -198,27 +198,27 @@ main(int argc, char *argv[])
 		error("user \"_dhcp\" not found");
 
 	if (daemonize)
-		daemon(0, 0);
+		(void)daemon(0, 0);
 
 	/* don't go near /dev/pf unless we actually intend to use it */
 	if ((abandoned_tab != NULL) ||
 	    (changedmac_tab != NULL) ||
-	    (leased_tab != NULL)){
+	    (leased_tab != NULL)) {
 		if (pipe(pfpipe) == -1)
 			error("pipe (%m)");
-		switch (pfproc_pid = fork()){
+		switch (pfproc_pid = fork()) {
 		case -1:
 			error("fork (%m)");
 			/* NOTREACHED */
 			exit(1);
 		case 0:
 			/* child process. start up table engine */
-			close(pfpipe[1]);
+			(void)close(pfpipe[1]);
 			pftable_handler();
 			/* NOTREACHED */
 			exit(1);
 		default:
-			close(pfpipe[0]);
+			(void)close(pfpipe[0]);
 			gotpipe = 1;
 			break;
 		}
@@ -246,11 +246,12 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s [-dfn] [-A abandoned_ip_table]", __progname);
-	fprintf(stderr, " [-C changed_ip_table]\n");
-	fprintf(stderr, "\t[-c config-file] [-L leased_ip_table]");
-	fprintf(stderr, " [-l lease-file] [-u[bind_address]]\n");
-	fprintf(stderr, "\t[-Y synctarget] [-y synclisten] [if0 [... ifN]]\n");
+	(void)fprintf(stderr, "usage: %s [-dfn] [-A abandoned_ip_table]", __progname);
+	(void)fprintf(stderr, " [-C changed_ip_table]\n");
+	(void)fprintf(stderr, "\t[-c config-file] [-L leased_ip_table]");
+	(void)fprintf(stderr, " [-l lease-file] [-u[bind_address]]\n");
+	(void)fprintf(stderr, "\t[-Y synctarget] [-y synclisten] [if0 [... ifN]]\n");
+	
 	exit(1);
 }
 
@@ -271,12 +272,12 @@ lease_pinged(struct iaddr from, u_int8_t *packet __unused, int length __unused)
 	lp = find_lease_by_ip_addr(from);
 
 	if (!lp) {
-		note("unexpected ICMP Echo Reply from %s", piaddr(from));
+		(void)note("unexpected ICMP Echo Reply from %s", piaddr(from));
 		return;
 	}
 
 	if (!lp->state && !lp->releasing) {
-		warning("ICMP Echo Reply for %s arrived late or is spurious.",
+		(void)warning("ICMP Echo Reply for %s arrived late or is spurious.",
 		    piaddr(from));
 		return;
 	}
@@ -290,9 +291,9 @@ lease_pinged(struct iaddr from, u_int8_t *packet __unused, int length __unused)
 	 *     and something answered, so we don't release it.
 	 */
 	if (lp->releasing) {
-		warning("IP address %s answers a ping after sending a release",
+		(void)warning("IP address %s answers a ping after sending a release",
 		    piaddr(lp->ip_addr));
-		warning("Possible release spoof - Not releasing address %s",
+		(void)warning("Possible release spoof - Not releasing address %s",
 		    piaddr(lp->ip_addr));
 		lp->releasing = 0;
 	} else {

@@ -42,7 +42,7 @@
 
 #include "dhcpd.h"
 
-static int do_hash(unsigned char *, int, int);
+static int do_hash(unsigned char *, size_t, size_t);
 
 struct hash_table *
 new_hash(void)
@@ -51,7 +51,7 @@ new_hash(void)
 
 	rv = calloc(1, sizeof(struct hash_table));
 	if (!rv)
-		warning("No memory for new hash.");
+		(void)warning("No memory for new hash.");
 	else
 		rv->hash_count = DEFAULT_HASH_SIZE;
 
@@ -59,7 +59,7 @@ new_hash(void)
 }
 
 static int
-do_hash(unsigned char *name, int len, int size)
+do_hash(unsigned char *name, size_t len, size_t size)
 {
 	int accum = 0;
 	unsigned char *s = name;
@@ -75,7 +75,7 @@ do_hash(unsigned char *name, int len, int size)
 	return (accum % size);
 }
 
-void add_hash(struct hash_table *table, unsigned char *name, int len,
+void add_hash(struct hash_table *table, unsigned char *name, size_t len,
     unsigned char *pointer)
 {
 	int hashno;
@@ -89,7 +89,7 @@ void add_hash(struct hash_table *table, unsigned char *name, int len,
 	hashno = do_hash(name, len, table->hash_count);
 	bp = calloc(1, sizeof(struct hash_bucket));
 	if (!bp) {
-		warning("Can't add %s to hash table.", name);
+		(void)warning("Can't add %s to hash table.", name);
 		return;
 	}
 	bp->name = name;
@@ -100,7 +100,7 @@ void add_hash(struct hash_table *table, unsigned char *name, int len,
 }
 
 void
-delete_hash_entry(struct hash_table *table, unsigned char *name, int len)
+delete_hash_entry(struct hash_table *table, unsigned char *name, size_t len)
 {
 	int hashno;
 	struct hash_bucket *bp, *pbp = NULL;
@@ -132,7 +132,7 @@ delete_hash_entry(struct hash_table *table, unsigned char *name, int len)
 }
 
 void *
-hash_lookup(struct hash_table *table, unsigned char *name, int len)
+hash_lookup(struct hash_table *table, unsigned char *name, size_t len)
 {
 	int hashno;
 	struct hash_bucket *bp;

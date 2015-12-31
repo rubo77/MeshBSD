@@ -49,21 +49,23 @@ print_hw_addr(int htype, int hlen, unsigned char *data)
 	int		i, j, slen = sizeof(habuf);
 	char		*s = habuf;
 
-	if (htype == 0 || hlen == 0) {
-bad:
-		strlcpy(habuf, "<null>", sizeof habuf);
-		return habuf;
-	}
+	if (htype == 0 || hlen == 0) 
+		goto bad;
 
 	for (i = 0; i < hlen; i++) {
 		j = snprintf(s, slen, "%02x", data[i]);
 		if (j <= 0 || j >= slen)
 			goto bad;
+		
 		j = strlen(s);
 		s += j;
 		slen -= (j + 1);
 		*s++ = ':';
 	}
 	*--s = '\0';
-	return habuf;
+out:	
+	return (habuf);
+bad:
+	(void)strlcpy(habuf, "<null>", sizeof habuf);
+	goto out;	
 }
