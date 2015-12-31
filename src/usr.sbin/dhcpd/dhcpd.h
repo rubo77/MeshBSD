@@ -475,9 +475,6 @@ typedef unsigned char option_mask[16];
 
 /* External definitions... */
 
-/* reallocarray.c */
-void *reallocarray(void *, size_t, size_t);
-
 /* options.c */
 extern int bad_options;
 extern int bad_options_max;
@@ -512,16 +509,12 @@ extern int pfpipe[2];
 extern int syncrecv;
 extern int syncsend;
 
-extern time_t		cur_time;
 extern struct group	root_group;
 
 extern u_int16_t	server_port;
 extern u_int16_t	client_port;
 extern int		log_priority;
 extern int		log_perror;
-
-extern char		*path_dhcpd_conf;
-extern char		*path_dhcpd_db;
 
 int 	main(int, char *[]);
 void	cleanup(void);
@@ -544,7 +537,6 @@ int 	next_token(char **, FILE *);
 int 	peek_token(char **, FILE *);
 
 int 	kw_cmp(const void *, const void *);
-
 
 /* confpars.c */
 int 	readconf(void);

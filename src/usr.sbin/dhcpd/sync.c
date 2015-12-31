@@ -24,8 +24,6 @@
 #include <sys/resource.h>
 #include <sys/uio.h>
 #include <sys/ioctl.h>
-#include <sys/queue.h>
-
 
 #include <net/if.h>
 #include <netinet/in.h>
@@ -47,6 +45,8 @@
 #include "dhcpd.h"
 #include "sync.h"
 
+LIST_HEAD(synchosts, sync_host) sync_hosts = LIST_HEAD_INITIALIZER(sync_hosts);
+
 int sync_debug;
 
 u_int32_t sync_counter;
@@ -56,14 +56,6 @@ int sendmcast;
 struct sockaddr_in sync_in;
 struct sockaddr_in sync_out;
 static char *sync_key;
-
-struct sync_host {
-	LIST_ENTRY(sync_host)	h_entry;
-
-	char			*h_name;
-	struct sockaddr_in	sh_addr;
-};
-LIST_HEAD(synchosts, sync_host) sync_hosts = LIST_HEAD_INITIALIZER(sync_hosts);
 
 void 	sync_send(struct iovec *, int);
 
@@ -81,7 +73,7 @@ sync_addhost(const char *name, u_short port)
 		return (EINVAL);
 	for (res = res0; res != NULL; res = res->ai_next) {
 		if (addr == NULL && res->ai_family == AF_INET) {
-			addr = (struct sockaddr_in *)res->ai_addr;
+			addr = (void *)res->ai_addr;
 			break;
 		}
 	}
@@ -158,7 +150,7 @@ sync_init(const char *iface, const char *baddr, u_short port)
 			return (-1);
 		}
 		/* Use empty key by default */
-		sync_key = "";
+		sync_key = (char *)"";
 	}
 
 	syncfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -205,7 +197,7 @@ sync_init(const char *iface, const char *baddr, u_short port)
 		goto fail;
 
 	bzero(&sync_in, sizeof(sync_in));
-	addr = (struct sockaddr_in *)&ifr.ifr_addr;
+	addr = (void *)&ifr.ifr_addr;
 	sync_in.sin_family = AF_INET;
 	sync_in.sin_len = sizeof(sync_in);
 	sync_in.sin_addr.s_addr = addr->sin_addr.s_addr;
@@ -261,16 +253,20 @@ sync_recv(void)
 	struct lease l, *lp;
 	u_int8_t *p;
 	socklen_t addr_len;
-	ssize_t len;
+	ssize_t status;
+	size_t len;
 	u_int hmac_len;
 
 	bzero(&addr, sizeof(addr));
 	bzero(buf, sizeof(buf));
 
 	addr_len = sizeof(addr);
-	if ((len = recvfrom(syncfd, buf, sizeof(buf), 0,
+	if ((status = recvfrom(syncfd, buf, sizeof(buf), 0,
 	    (struct sockaddr *)&addr, &addr_len)) < 1)
 		return;
+	
+	len = status;
+	
 	if (addr.sin_addr.s_addr != htonl(INADDR_ANY) &&
 	    bcmp(&sync_in.sin_addr, &addr.sin_addr,
 	    sizeof(addr.sin_addr)) == 0)
@@ -335,12 +331,13 @@ sync_recv(void)
 			    lp->hardware_addr.hlen, lp->hardware_addr.haddr),
 			    piaddr(lp->ip_addr),
 			    (long long)lp->starts, (long long)lp->ends);
+			
 			/* now whack the lease in there */
+			
 			if (lease == NULL) {
 				enter_lease(lp);
 				write_leases();
-			}
-			else if (lease->ends < lp->ends)
+			} else if (lease->ends < lp->ends)
 				(void)supersede_lease(lease, lp, 1);
 			else if (lease->ends > lp->ends)
 				/*
@@ -360,11 +357,9 @@ sync_recv(void)
 		len -= ntohs(tlv->st_length);
 		p = ((u_int8_t *)tlv) + ntohs(tlv->st_length);
 	}
-
- done:
+done:
 	return;
-
- trunc:
+trunc:
 	if (sync_debug)
 		note("%s(sync): truncated or invalid packet\n",
 		    inet_ntoa(addr.sin_addr));

@@ -41,13 +41,13 @@ void
 udpsock_startup(struct in_addr bindaddr)
 {
 	int			 sock, onoff;
-	struct sockaddr_in	 sin4;
+	struct sockaddr_in	 sin;
 	struct udpsock		*udpsock;
 
 	if ((udpsock = calloc(1, sizeof(struct udpsock))) == NULL)
 		error("could not create udpsock: %s", strerror(errno));
 
-	(void)memset(&sin4, 0, sizeof(sin4));
+	(void)memset(&sin, 0, sizeof(sin));
 	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		error("creating a socket failed for udp: %s", strerror(errno));
 
@@ -56,19 +56,19 @@ udpsock_startup(struct in_addr bindaddr)
 		error("setsocketopt IP_RECVIF failed for udp: %s",
 		    strerror(errno));
 
-	sin4.sin_family = AF_INET;
-	sin4.sin_len = sizeof(sin4);
-	sin4.sin_addr = bindaddr;
-	sin4.sin_port = server_port;
+	sin.sin_family = AF_INET;
+	sin.sin_len = sizeof(sin);
+	sin.sin_addr = bindaddr;
+	sin.sin_port = server_port;
 
-	if (bind(sock, (struct sockaddr *)&sin4, sizeof(sin4)) != 0)
+	if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) != 0)
 		error("bind failed for udp: %s", strerror(errno));
 
 	add_protocol("udp", sock, udpsock_handler, 
 		(void *)(intptr_t)udpsock);
 	
 	(void)note("Listening on %s:%d/udp.", 
-		inet_ntoa(sin4.sin_addr),
+		inet_ntoa(sin.sin_addr),
 	    ntohs(server_port));
 
 	udpsock->sock = sock;
@@ -85,12 +85,12 @@ udpsock_handler(struct protocol *protocol)
 	struct cmsghdr		*cm;
 	struct iovec		 iov[1];
 	struct sockaddr_storage	 ss;
-	struct sockaddr_in	*sin4;
+	struct sockaddr_in	*sin0, *sin;
 	struct sockaddr_dl	*sdl = NULL;
 	struct interface_info	 iface;
 	struct iaddr		 from, addr;
 	unsigned char		 packetbuf[4095];
-	struct dhcp_packet	*packet = (struct dhcp_packet *)packetbuf;
+	struct dhcp_packet	*packet = (void *)packetbuf;
 	struct hardware		 hw;
 	struct ifreq		 ifr;
 	struct subnet		*subnet;
@@ -121,13 +121,13 @@ udpsock_handler(struct protocol *protocol)
 			"message is not AF_INET");
 		return;
 	}
-	sin4 = (struct sockaddr_in *)&ss;
+	sin0 = (struct sockaddr_in *)&ss;
 	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(&m);
 	    m.msg_controllen != 0 && cm;
 	    cm = (struct cmsghdr *)CMSG_NXTHDR(&m, cm)) {
 		if (cm->cmsg_level == IPPROTO_IP &&
 		    cm->cmsg_type == IP_RECVIF)
-			sdl = (struct sockaddr_dl *)CMSG_DATA(cm);
+			sdl = (void *)CMSG_DATA(cm);
 	}
 	if (sdl == NULL) {
 		(void)warning("could not get the received "
@@ -154,13 +154,14 @@ udpsock_handler(struct protocol *protocol)
 	if (ifr.ifr_addr.sa_family != AF_INET)
 		return;
 
+	sin = (void *)&ifr.ifr_addr;
+
 	iface.is_udpsock = 1;
 	iface.send_packet = udpsock_send_packet;
 	iface.wfdesc = udpsock->sock;
 	iface.ifp = &ifr;
 	iface.index = sdl->sdl_index;
-	iface.primary_address = 
-		((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr;
+	iface.primary_address = sin->sin_addr;
 	(void)strlcpy(iface.name, ifname, sizeof(iface.name));
 
 	addr.len = 4;
@@ -171,15 +172,17 @@ udpsock_handler(struct protocol *protocol)
 	iface.shared_network = subnet->shared_network ;
 	from.len = 4;
 	
-	(void)memcpy(&from.iabuf, &sin4->sin_addr, from.len);
+	(void)memcpy(&from.iabuf, &sin0->sin_addr, from.len);
 	
-	do_packet(&iface, packet, len, sin4->sin_port, from, &hw);
+	do_packet(&iface, packet, len, sin0->sin_port, from, &hw);
 }
 
 ssize_t
-udpsock_send_packet(struct interface_info *interface, struct dhcp_packet *raw,
-    size_t len, struct in_addr from, struct sockaddr_in *to,
-    struct hardware *hto)
+udpsock_send_packet(struct interface_info *interface, 
+	struct dhcp_packet *raw, size_t len, 
+	struct in_addr from __unused, 
+	struct sockaddr_in *to __unused,
+    struct hardware *hto __unused)
 {
 	return (sendto(interface->wfdesc, raw, len, 0, (struct sockaddr *)to,
 	    sizeof(struct sockaddr_in)));

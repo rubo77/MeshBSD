@@ -118,8 +118,8 @@ icmp_echoreply(struct protocol *protocol)
 	struct sockaddr_in from;
 	u_int8_t icbuf[1500];
 	struct icmp *icfrom;
-	int status, len;
-	socklen_t salen;
+	socklen_t salen, len;
+	ssize_t status;
 	struct iaddr ia;
 
 	salen = sizeof(from);
@@ -129,13 +129,14 @@ icmp_echoreply(struct protocol *protocol)
 		warning("icmp_echoreply: %m");
 		return;
 	}
+	len = status;
 
 	/* Probably not for us. */
-	if (status < (sizeof(struct ip)) + (sizeof *icfrom))
+	if (len < (sizeof(struct ip)) + (sizeof *icfrom))
 		return;
 
-	len = status - sizeof(struct ip);
-	icfrom = (struct icmp *)(icbuf + sizeof(struct ip));
+	len -= sizeof(struct ip);
+	icfrom = (void *)(icbuf + sizeof(struct ip));
 
 	/* Silently discard ICMP packets that aren't echoreplies. */
 	if (icfrom->icmp_type != ICMP_ECHOREPLY)
