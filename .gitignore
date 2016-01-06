@@ -2,7 +2,52 @@
 !/.gitignore
 
 #
-# Configuration.
+# Etc.
+#
+!/src/etc/dhcpd.conf
+
+#
+# Userspace
+#
+!/src/usr.sbin/Makefile
+
+!/src/usr.sbin/dhcpd/Makefile
+!/src/usr.sbin/dhcpd/alloc.c
+!/src/usr.sbin/dhcpd/bootp.c
+!/src/usr.sbin/dhcpd/bpf.c
+!/src/usr.sbin/dhcpd/conflex.c
+!/src/usr.sbin/dhcpd/confpars.c
+!/src/usr.sbin/dhcpd/convert.c
+!/src/usr.sbin/dhcpd/db.c
+!/src/usr.sbin/dhcpd/dhcp-options.5
+!/src/usr.sbin/dhcpd/dhcp.c
+!/src/usr.sbin/dhcpd/dhcp.h
+!/src/usr.sbin/dhcpd/dhcpd.8
+!/src/usr.sbin/dhcpd/dhcpd.c
+!/src/usr.sbin/dhcpd/dhcpd.conf.5
+!/src/usr.sbin/dhcpd/dhcpd.h
+!/src/usr.sbin/dhcpd/dhcpd.leases.5
+!/src/usr.sbin/dhcpd/dhctoken.h
+!/src/usr.sbin/dhcpd/dispatch.c
+!/src/usr.sbin/dhcpd/errwarn.c
+!/src/usr.sbin/dhcpd/hash.c
+!/src/usr.sbin/dhcpd/icmp.c
+!/src/usr.sbin/dhcpd/inet.c
+!/src/usr.sbin/dhcpd/memory.c
+!/src/usr.sbin/dhcpd/options.c
+!/src/usr.sbin/dhcpd/packet.c
+!/src/usr.sbin/dhcpd/parse.c
+!/src/usr.sbin/dhcpd/pfutils.c
+!/src/usr.sbin/dhcpd/print.c
+!/src/usr.sbin/dhcpd/sync.c
+!/src/usr.sbin/dhcpd/sync.h
+!/src/usr.sbin/dhcpd/tables.c
+!/src/usr.sbin/dhcpd/tree.c
+!/src/usr.sbin/dhcpd/tree.h
+!/src/usr.sbin/dhcpd/udpsock.c
+
+#
+# Configuration
 #
 !/src/sys/conf/files
 !/src/sys/conf/NOTES
