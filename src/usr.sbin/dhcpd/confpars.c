@@ -67,6 +67,9 @@ readconf(void)
 	root_group.allow_booting = 1;
 	root_group.authoritative = 1;
 
+	if (path_dhcpd_conf == NULL)  
+		path_dhcpd_conf = strdup(_PATH_DHCPD_CONF);
+
 	if ((cfile = fopen(path_dhcpd_conf, "r")) == NULL)
 		error("Can't open %s: %m", path_dhcpd_conf);
 
@@ -81,6 +84,9 @@ readconf(void)
 	} while (1);
 	token = next_token(&val, cfile); /* Clear the peek buffer */
 	(void)fclose(cfile);
+
+	free(path_dhcpd_conf);
+	path_dhcpd_conf = NULL;
 
 	return (!warnings_occurred);
 }
@@ -129,7 +135,7 @@ read_leases(void)
 			if (lease)
 				enter_lease(lease);
 			else
-				parse_warn("possibly corrupt lease file");
+				(void)parse_warn("possibly corrupt lease file");
 		}
 
 	} while (1);
@@ -182,7 +188,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 		if (type != HOST_DECL)
 			parse_host_declaration(cfile, group);
 		else {
-			parse_warn("host declarations not allowed here.");
+			(void)parse_warn("host declarations not allowed here.");
 			skip_to_semi(cfile);
 		}
 		return (1);
@@ -191,7 +197,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 		if (type != HOST_DECL)
 			parse_group_declaration(cfile, group);
 		else {
-			parse_warn("host declarations not allowed here.");
+			(void)parse_warn("host declarations not allowed here.");
 			skip_to_semi(cfile);
 		}
 		return (1);
@@ -203,7 +209,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 		if (type == SHARED_NET_DECL ||
 		    type == HOST_DECL ||
 		    type == SUBNET_DECL) {
-			parse_warn("shared-network parameters not %s.",
+			(void)parse_warn("shared-network parameters not %s.",
 				    "allowed here");
 			skip_to_semi(cfile);
 			break;
@@ -214,7 +220,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 
 	case TOK_SUBNET:
 		if (type == HOST_DECL || type == SUBNET_DECL) {
-			parse_warn("subnet declarations not allowed here.");
+			(void)parse_warn("subnet declarations not allowed here.");
 			skip_to_semi(cfile);
 			return (1);
 		}
@@ -282,13 +288,13 @@ parse_statement(FILE *cfile, struct group *group, int type,
 
 	case TOK_BOOT_UNKNOWN_CLIENTS:
 		if (type == HOST_DECL)
-			parse_warn("boot-unknown-clients not allowed here.");
+			(void)parse_warn("boot-unknown-clients not allowed here.");
 		group->boot_unknown_clients = parse_boolean(cfile);
 		break;
 
 	case TOK_GET_LEASE_HOSTNAMES:
 		if (type == HOST_DECL)
-			parse_warn("get-lease-hostnames not allowed here.");
+			(void)parse_warn("get-lease-hostnames not allowed here.");
 		group->get_lease_hostnames = parse_boolean(cfile);
 		break;
 
@@ -298,7 +304,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 
 	case TOK_USE_HOST_DECL_NAMES:
 		if (type == HOST_DECL)
-			parse_warn("use-host-decl-names not allowed here.");
+			(void)parse_warn("use-host-decl-names not allowed here.");
 		group->use_host_decl_names = parse_boolean(cfile);
 		break;
 
@@ -312,12 +318,12 @@ parse_statement(FILE *cfile, struct group *group, int type,
 		switch (token) {
 		case TOK_AUTHORITATIVE:
 			if (type == HOST_DECL)
-			    parse_warn("authority makes no sense here.");
+			    (void)parse_warn("authority makes no sense here.");
 			group->authoritative = 0;
 			parse_semi(cfile);
 			break;
 		default:
-			parse_warn("expecting assertion");
+			(void)parse_warn("expecting assertion");
 			skip_to_semi(cfile);
 			break;
 		}
@@ -325,7 +331,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 
 	case TOK_AUTHORITATIVE:
 		if (type == HOST_DECL)
-		    parse_warn("authority makes no sense here.");
+		    (void)parse_warn("authority makes no sense here.");
 		group->authoritative = 1;
 		parse_semi(cfile);
 		break;
@@ -368,7 +374,7 @@ parse_statement(FILE *cfile, struct group *group, int type,
 		if (host_decl)
 			host_decl->interface = hardware;
 		else
-			parse_warn("hardware address parameter %s",
+			(void)parse_warn("hardware address parameter %s",
 				    "not allowed here.");
 		break;
 
@@ -377,13 +383,13 @@ parse_statement(FILE *cfile, struct group *group, int type,
 		if (host_decl)
 			host_decl->fixed_addr = cache;
 		else
-			parse_warn("fixed-address parameter not %s",
+			(void)parse_warn("fixed-address parameter not %s",
 				    "allowed here.");
 		break;
 
 	case TOK_RANGE:
 		if (type != SUBNET_DECL || !group->subnet) {
-			parse_warn("range declaration not allowed here.");
+			(void)parse_warn("range declaration not allowed here.");
 			skip_to_semi(cfile);
 			return declaration;
 		}
@@ -400,15 +406,15 @@ parse_statement(FILE *cfile, struct group *group, int type,
 
 	default:
 		if (declaration)
-			parse_warn("expecting a declaration.");
+			(void)parse_warn("expecting a declaration.");
 		else
-			parse_warn("expecting a parameter or declaration.");
+			(void)parse_warn("expecting a parameter or declaration.");
 		skip_to_semi(cfile);
 		return declaration;
 	}
 
 	if (declaration) {
-		parse_warn("parameters not allowed after first declaration.");
+		(void)parse_warn("parameters not allowed after first declaration.");
 		return (1);
 	}
 
@@ -445,7 +451,7 @@ parse_allow_deny(FILE *cfile, struct group *group, int flag)
 		break;
 
 	default:
-		parse_warn("expecting allow/deny key");
+		(void)parse_warn("expecting allow/deny key");
 		skip_to_semi(cfile);
 		return;
 	}
@@ -466,7 +472,7 @@ parse_boolean(FILE *cfile)
 	else if (!strcasecmp (val, "false") || !strcasecmp (val, "off"))
 		rv = 0;
 	else {
-		parse_warn("boolean value (true/false/on/off) expected");
+		(void)parse_warn("boolean value (true/false/on/off) expected");
 		skip_to_semi(cfile);
 		return (0);
 	}
@@ -485,7 +491,7 @@ parse_lbrace(FILE *cfile)
 
 	token = next_token(&val, cfile);
 	if (token != '{') {
-		parse_warn("expecting left brace.");
+		(void)parse_warn("expecting left brace.");
 		skip_to_semi(cfile);
 		return (0);
 	}
@@ -529,7 +535,7 @@ parse_host_declaration(FILE *cfile, struct group *group)
 		}
 		if (token == EOF) {
 			token = next_token(&val, cfile);
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		}
 		declaration = parse_statement(cfile, host->group,
@@ -569,7 +575,7 @@ parse_class_declaration(FILE *cfile, struct group *group, int type)
 
 	token = next_token(&val, cfile);
 	if (token != TOK_STRING) {
-		parse_warn("Expecting class name");
+		(void)parse_warn("Expecting class name");
 		skip_to_semi(cfile);
 		return;
 	}
@@ -593,7 +599,7 @@ parse_class_declaration(FILE *cfile, struct group *group, int type)
 			break;
 		} else if (token == EOF) {
 			token = next_token(&val, cfile);
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		} else {
 			declaration = parse_statement(cfile, class->group,
@@ -631,10 +637,10 @@ parse_shared_net_declaration(FILE *cfile, struct group *group)
 		token = next_token(&val, cfile);
 
 		if (val[0] == 0) {
-			parse_warn("zero-length shared network name");
-			val = (char *)"<no-name-given>";
-		}
-		name = strdup(val);
+			(void)parse_warn("zero-length shared network name");
+			name = strdup("<no-name-given>");
+		} else
+			name = strdup(val);
 		if (name == NULL)
 			error("no memory for shared network name");
 	} else {
@@ -662,14 +668,14 @@ parse_shared_net_declaration(FILE *cfile, struct group *group)
 				free(share->group);
 				free(share->name);
 				free(share);
-				parse_warn("empty shared-network decl");
+				(void)parse_warn("empty shared-network decl");
 				return;
 			}
 			enter_shared_network(share);
 			return;
 		} else if (token == EOF) {
 			token = next_token(&val, cfile);
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		}
 
@@ -713,7 +719,7 @@ parse_subnet_declaration(FILE *cfile, struct shared_network *share)
 	if (token != TOK_NETMASK) {
 		free(subnet->group);
 		free(subnet);
-		parse_warn("Expecting netmask");
+		(void)parse_warn("Expecting netmask");
 		skip_to_semi(cfile);
 		return;
 	}
@@ -743,7 +749,7 @@ parse_subnet_declaration(FILE *cfile, struct shared_network *share)
 			break;
 		} else if (token == EOF) {
 			token = next_token(&val, cfile);
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		}
 		declaration = parse_statement(cfile, subnet->group,
@@ -799,7 +805,7 @@ parse_group_declaration(FILE *cfile, struct group *group)
 			break;
 		} else if (token == EOF) {
 			token = next_token(&val, cfile);
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		}
 		declaration = parse_statement(cfile, g, GROUP_DECL, NULL,
@@ -822,13 +828,13 @@ parse_cidr(FILE *cfile, unsigned char *addr, unsigned char *prefix)
 	token = peek_token(&val, cfile);
 
 	if (!parse_numeric_aggregate(cfile, addr, &len, '.', 10, 8)) {
-		parse_warn("Expecting CIDR subnet");
+		(void)parse_warn("Expecting CIDR subnet");
 		goto nocidr;
 	}
 
 	token = next_token(&val, cfile);
 	if (token != '/') {
-		parse_warn("Expecting '/'");
+		(void)parse_warn("Expecting '/'");
 		goto nocidr;
 	}
 
@@ -838,7 +844,7 @@ parse_cidr(FILE *cfile, unsigned char *addr, unsigned char *prefix)
 
 	if (token != TOK_NUMBER_OR_NAME || errstr) {
 		*prefix = 0;
-		parse_warn("Expecting CIDR prefix length, got '%s'", val);
+		(void)parse_warn("Expecting CIDR prefix length, got '%s'", val);
 		goto nocidr;
 	}
 
@@ -886,7 +892,7 @@ parse_ip_addr_or_hostname(FILE *cfile, int uniform)
 
 	if (token == TOK_NUMBER_OR_NAME) {
 		if (!parse_numeric_aggregate(cfile, addr, &len, '.', 10, 8)) {
-			parse_warn("%s (%d): expecting IP address or hostname",
+			(void)parse_warn("%s (%d): expecting IP address or hostname",
 				    val, token);
 			rv = NULL;
 		} else
@@ -894,7 +900,7 @@ parse_ip_addr_or_hostname(FILE *cfile, int uniform)
 	} else {
 		if (token != '{' && token != '}')
 			token = next_token(&val, cfile);
-		parse_warn("%s (%d): expecting IP address or hostname",
+		(void)parse_warn("%s (%d): expecting IP address or hostname",
 			    val, token);
 		if (token != ';')
 			skip_to_semi(cfile);
@@ -956,7 +962,7 @@ parse_option_param(FILE *cfile, struct group *group)
 
 	token = next_token(&val, cfile);
 	if (!is_identifier(token)) {
-		parse_warn("expecting identifier after option keyword.");
+		(void)parse_warn("expecting identifier after option keyword.");
 		if (token != ';')
 			skip_to_semi(cfile);
 		return;
@@ -972,7 +978,7 @@ parse_option_param(FILE *cfile, struct group *group)
 		/* The next token should be an identifier... */
 		token = next_token(&val, cfile);
 		if (!is_identifier(token)) {
-			parse_warn("expecting identifier after '.'");
+			(void)parse_warn("expecting identifier after '.'");
 			if (token != ';')
 				skip_to_semi(cfile);
 			free(vendor);
@@ -986,7 +992,7 @@ parse_option_param(FILE *cfile, struct group *group)
 		/* If it's not there, we can't parse the rest of the
 		   declaration. */
 		if (!universe) {
-			parse_warn("no vendor named %s.", vendor);
+			(void)parse_warn("no vendor named %s.", vendor);
 			skip_to_semi(cfile);
 			free(vendor);
 			return;
@@ -1005,9 +1011,9 @@ parse_option_param(FILE *cfile, struct group *group)
 	/* If we didn't get an option structure, it's an undefined option. */
 	if (!option) {
 		if (val == vendor)
-			parse_warn("no option named %s", val);
+			(void)parse_warn("no option named %s", val);
 		else
-			parse_warn("no option named %s for vendor %s",
+			(void)parse_warn("no option named %s for vendor %s",
 				    val, vendor);
 		skip_to_semi(cfile);
 		free(vendor);
@@ -1023,8 +1029,9 @@ parse_option_param(FILE *cfile, struct group *group)
 		   not an array of pairs of IP addresses, or something
 		   like that. */
 		int uniform = option->format[1] == 'A';
+		char *fmt0 = strdup(option->format);
 
-		for (fmt = (char *)option->format; *fmt; fmt++) {
+		for (fmt = fmt0; *fmt; fmt++) {
 			if (*fmt == 'A')
 				break;
 			switch (*fmt) {
@@ -1035,11 +1042,12 @@ parse_option_param(FILE *cfile, struct group *group)
 						token = next_token
 							(&val, cfile);
 						if (token != TOK_NUMBER_OR_NAME) {
-							parse_warn("expecting "
+							(void)parse_warn("expecting "
 							    "hex number.");
 							if (token != ';')
 								skip_to_semi(
 								    cfile);
+							free(fmt0);
 							return;
 						}
 						convert_num(buf, val, 16, 8);
@@ -1056,9 +1064,10 @@ parse_option_param(FILE *cfile, struct group *group)
 					    tree_const((unsigned char *)val,
 					    strlen(val)));
 				} else {
-					parse_warn("expecting string %s.",
+					(void)parse_warn("expecting string %s.",
 					    "or hexadecimal data");
 					skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				break;
@@ -1067,9 +1076,10 @@ parse_option_param(FILE *cfile, struct group *group)
 				token = next_token(&val, cfile);
 				if (token != TOK_STRING
 				    && !is_identifier(token)) {
-					parse_warn("expecting string.");
+					(void)parse_warn("expecting string.");
 					if (token != ';')
 						skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				tree = tree_concat(tree,
@@ -1079,8 +1089,10 @@ parse_option_param(FILE *cfile, struct group *group)
 
 			case 'I': /* IP address or hostname. */
 				t = parse_ip_addr_or_hostname(cfile, uniform);
-				if (!t)
+				if (!t) {
+					free(fmt0);
 					return;
+				}
 				tree = tree_concat(tree, t);
 				break;
 
@@ -1089,9 +1101,10 @@ parse_option_param(FILE *cfile, struct group *group)
 				token = next_token(&val, cfile);
 				if (token != TOK_NUMBER && token !=
 				    TOK_NUMBER_OR_NAME) {
-					parse_warn("expecting number.");
+					(void)parse_warn("expecting number.");
 					if (token != ';')
 						skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				convert_num(buf, val, 0, 32);
@@ -1102,9 +1115,10 @@ parse_option_param(FILE *cfile, struct group *group)
 				token = next_token(&val, cfile);
 				if (token != TOK_NUMBER && token !=
 				    TOK_NUMBER_OR_NAME) {
-					parse_warn("expecting number.");
+					(void)parse_warn("expecting number.");
 					if (token != ';')
 						skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				convert_num(buf, val, 0, 16);
@@ -1115,9 +1129,10 @@ parse_option_param(FILE *cfile, struct group *group)
 				token = next_token(&val, cfile);
 				if (token != TOK_NUMBER && token !=
 				    TOK_NUMBER_OR_NAME) {
-					parse_warn("expecting number.");
+					(void)parse_warn("expecting number.");
 					if (token != ';')
 						skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				convert_num(buf, val, 0, 8);
@@ -1126,9 +1141,10 @@ parse_option_param(FILE *cfile, struct group *group)
 			case 'f': /* Boolean flag. */
 				token = next_token(&val, cfile);
 				if (!is_identifier(token)) {
-					parse_warn("expecting identifier.");
+					(void)parse_warn("expecting identifier.");
 					if (token != ';')
 						skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				if (!strcasecmp(val, "true")
@@ -1138,16 +1154,19 @@ parse_option_param(FILE *cfile, struct group *group)
 					 || !strcasecmp(val, "off"))
 					buf[0] = 0;
 				else {
-					parse_warn("expecting boolean.");
+					(void)parse_warn("expecting boolean.");
 					if (token != ';')
 						skip_to_semi(cfile);
+					free(fmt0);
 					return;
 				}
 				tree = tree_concat(tree, tree_const(buf, 1));
 				break;
 			case 'C':
-				if (!parse_cidr(cfile, buf, &cprefix))
+				if (!parse_cidr(cfile, buf, &cprefix)) {
+					free(fmt0);
 					return;
+				}
 				tree = tree_concat(tree, tree_const(&cprefix,
 				    sizeof(cprefix)));
 				if (cprefix > 0)
@@ -1158,6 +1177,7 @@ parse_option_param(FILE *cfile, struct group *group)
 				(void)warning("Bad format %c in parse_option_param.",
 				    *fmt);
 				skip_to_semi(cfile);
+				free(fmt0);
 				return;
 			}
 		}
@@ -1165,15 +1185,18 @@ parse_option_param(FILE *cfile, struct group *group)
 			token = peek_token(&val, cfile);
 			if (token == ',') {
 				token = next_token(&val, cfile);
+				free(fmt0);
 				continue;
 			}
+			free(fmt0);
 			break;
 		}
+		free(fmt0);
 	} while (*fmt == 'A');
 
 	token = next_token(&val, cfile);
 	if (token != ';') {
-		parse_warn("semicolon expected.");
+		(void)parse_warn("semicolon expected.");
 		skip_to_semi(cfile);
 		return;
 	}
@@ -1225,7 +1248,7 @@ parse_lease_declaration(FILE *cfile)
 		if (token == '}')
 			break;
 		else if (token == EOF) {
-			parse_warn("unexpected end of file");
+			(void)parse_warn("unexpected end of file");
 			break;
 		}
 		strlcpy(tbuf, val, sizeof tbuf);
@@ -1284,7 +1307,7 @@ parse_lease_declaration(FILE *cfile)
 					}
 					if (lease.uid_len == 0) {
 						lease.uid = NULL;
-						parse_warn("zero-length uid");
+						(void)parse_warn("zero-length uid");
 						seenbit = 0;
 						break;
 					}
@@ -1354,14 +1377,14 @@ parse_lease_declaration(FILE *cfile)
 			if (token != TOK_HARDWARE && token != TOK_STRING) {
 				token = next_token(&val, cfile);
 				if (token != ';') {
-					parse_warn("semicolon expected.");
+					(void)parse_warn("semicolon expected.");
 					skip_to_semi(cfile);
 					return (NULL);
 				}
 			}
 		}
 		if (seenmask & seenbit) {
-			parse_warn("Too many %s parameters in lease %s\n",
+			(void)parse_warn("Too many %s parameters in lease %s\n",
 			    tbuf, piaddr(lease.ip_addr));
 		} else
 			seenmask |= seenbit;
@@ -1407,7 +1430,7 @@ parse_address_range(FILE *cfile, struct subnet *subnet)
 
 	token = next_token(&val, cfile);
 	if (token != ';') {
-		parse_warn("semicolon expected.");
+		(void)parse_warn("semicolon expected.");
 		skip_to_semi(cfile);
 		return;
 	}

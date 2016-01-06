@@ -46,9 +46,6 @@
 #include <netinet/udp.h>
 #include <netinet/if_ether.h>
 
-u_int32_t 	checksum(unsigned char *, unsigned, u_int32_t);
-u_int32_t 	wrapsum(u_int32_t);
-
 u_int32_t
 checksum(unsigned char *buf, unsigned nbytes, u_int32_t sum)
 {

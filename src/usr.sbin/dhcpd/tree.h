@@ -94,7 +94,7 @@ struct tree_cache {
 };
 
 struct universe {
-	char		*name;
+	const char		*name;
 	struct hash_table *hash;
 	struct option	*options[256];
 };

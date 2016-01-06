@@ -16,7 +16,31 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
+/*
+ * Copyright (c) 2016 Henning Matyschok
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 #include <sys/stdint.h>
 #include <sys/file.h>
 #include <sys/wait.h>
@@ -47,17 +71,16 @@
 
 LIST_HEAD(synchosts, sync_host) sync_hosts = LIST_HEAD_INITIALIZER(sync_hosts);
 
-int sync_debug;
-
 u_int32_t sync_counter;
+
+int sync_debug;
 int syncfd = -1;
 int sendmcast;
 
 struct sockaddr_in sync_in;
 struct sockaddr_in sync_out;
-static char *sync_key;
 
-void 	sync_send(struct iovec *, int);
+static char *sync_key;
 
 int
 sync_addhost(const char *name, u_short port)
@@ -137,29 +160,32 @@ sync_init(const char *iface, const char *baddr, u_short port)
 				(void)fprintf(stderr, "multicast "
 					"interface does "
 				    "not match");
-				return (-1);
+				goto fail;
 			}
 		}
 	}
-
+/*
+ * XXX; probably a memory leak.
+ */
 	sync_key = SHA1_File(DHCP_SYNC_KEY, NULL);
 	if (sync_key == NULL) {
 		if (errno != ENOENT) {
 			fprintf(stderr, "failed to open sync key: %s\n",
 			    strerror(errno));
-			return (-1);
+			goto fail;
 		}
 		/* Use empty key by default */
-		sync_key = (char *)"";
-	}
-
+		sync_key = strdup("");
+	} else
+		sync_key = strdup(sync_key);
+	
 	syncfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (syncfd == -1)
-		return (-1);
+	if (syncfd == -1) 
+		goto fail1;
 
 	if (setsockopt(syncfd, SOL_SOCKET, SO_REUSEADDR, &one,
 	    sizeof(one)) == -1)
-		goto fail;
+		goto fail2;
 
 	bzero(&sync_out, sizeof(sync_out));
 	sync_out.sin_family = AF_INET;
@@ -171,11 +197,11 @@ sync_init(const char *iface, const char *baddr, u_short port)
 		sync_out.sin_port = htons(port);
 
 	if (bind(syncfd, (struct sockaddr *)&sync_out, sizeof(sync_out)) == -1)
-		goto fail;
+		goto fail2;
 
 	/* Don't use multicast messages */
 	if (iface == NULL)
-		return (syncfd);
+		goto out;
 
 	(void)strlcpy(ifnam, iface, sizeof(ifnam));
 	
@@ -187,14 +213,14 @@ sync_init(const char *iface, const char *baddr, u_short port)
 			(void)fprintf(stderr, "invalid "
 				"multicast ttl %s: %s",
 			    ttlstr, errstr);
-			goto fail;
+			goto fail2;
 		}
 	}
 
 	bzero(&ifr, sizeof(ifr));
 	(void)strlcpy(ifr.ifr_name, ifnam, sizeof(ifr.ifr_name));
 	if (ioctl(syncfd, SIOCGIFADDR, &ifr) == -1)
-		goto fail;
+		goto fail2;
 
 	bzero(&sync_in, sizeof(sync_in));
 	addr = (void *)&ifr.ifr_addr;
@@ -214,7 +240,7 @@ sync_init(const char *iface, const char *baddr, u_short port)
 			"membership to %s: %s",
 		    DHCP_SYNC_MCASTADDR, 
 		    strerror(errno));
-		goto fail;
+		goto fail2;
 	}
 	if (setsockopt(syncfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
 	    sizeof(ttl)) == -1) {
@@ -223,7 +249,7 @@ sync_init(const char *iface, const char *baddr, u_short port)
 				strerror(errno));
 		(void)setsockopt(syncfd, IPPROTO_IP,
 		    IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
-		goto fail;
+		goto fail2;
 	}
 
 	if (sync_debug) {
@@ -234,8 +260,11 @@ sync_init(const char *iface, const char *baddr, u_short port)
 	}
 out:
 	return (syncfd);
+fail2:
+	(void)close(syncfd);
+fail1:
+	free(sync_key);
 fail:
-	close(syncfd);
 	syncfd = -1;
 	goto out;
 }
@@ -441,6 +470,7 @@ sync_lease(struct lease *lease)
 	lv.lv_timestamp = htonl(lease->timestamp);
 	lv.lv_starts = htonl(lease->starts);
 	lv.lv_ends =  htonl(lease->ends);
+	
 	(void)memcpy(&lv.lv_ip_addr, &lease->ip_addr, 
 		sizeof(lv.lv_ip_addr));
 	(void)memcpy(&lv.lv_hardware_addr, &lease->hardware_addr,

@@ -39,10 +39,34 @@
  * see ``http://www.vix.com/isc''.  To learn more about Vixie
  * Enterprises, see ``http://www.vix.com''.
  */
-
+/*
+ * Copyright (c) 2016 Henning Matyschok
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 #include "dhcpd.h"
 
-static int do_hash(unsigned char *, size_t, size_t);
+static int do_hash(const char *, size_t, size_t);
 
 struct hash_table *
 new_hash(void)
@@ -59,10 +83,10 @@ new_hash(void)
 }
 
 static int
-do_hash(unsigned char *name, size_t len, size_t size)
+do_hash(const char *name, size_t len, size_t size)
 {
 	int accum = 0;
-	unsigned char *s = name;
+	const unsigned char *s = (const unsigned char *)name;
 	int i = len;
 
 	while (i--) {
@@ -75,8 +99,9 @@ do_hash(unsigned char *name, size_t len, size_t size)
 	return (accum % size);
 }
 
-void add_hash(struct hash_table *table, unsigned char *name, size_t len,
-    unsigned char *pointer)
+void 
+add_hash(struct hash_table *table, const char *name, 
+		size_t len, void *pointer)
 {
 	int hashno;
 	struct hash_bucket *bp;
@@ -84,7 +109,7 @@ void add_hash(struct hash_table *table, unsigned char *name, size_t len,
 	if (!table)
 		return;
 	if (!len)
-		len = strlen((char *)name);
+		len = strlen(name);
 
 	hashno = do_hash(name, len, table->hash_count);
 	bp = calloc(1, sizeof(struct hash_bucket));
@@ -100,7 +125,8 @@ void add_hash(struct hash_table *table, unsigned char *name, size_t len,
 }
 
 void
-delete_hash_entry(struct hash_table *table, unsigned char *name, size_t len)
+delete_hash_entry(struct hash_table *table, const char *name, 
+		size_t len)
 {
 	int hashno;
 	struct hash_bucket *bp, *pbp = NULL;
@@ -108,7 +134,7 @@ delete_hash_entry(struct hash_table *table, unsigned char *name, size_t len)
 	if (!table)
 		return;
 	if (!len)
-		len = strlen((char *)name);
+		len = strlen(name);
 
 	hashno = do_hash(name, len, table->hash_count);
 
@@ -117,8 +143,7 @@ delete_hash_entry(struct hash_table *table, unsigned char *name, size_t len)
 	 * find it, delete it.
 	 */
 	for (bp = table->buckets[hashno]; bp; bp = bp->next) {
-		if ((!bp->len &&
-		    !strcmp((char *)bp->name, (char *)name)) ||
+		if ((!bp->len && !strcmp(bp->name, name)) ||
 		    (bp->len == len && !memcmp(bp->name, name, len))) {
 			if (pbp)
 				pbp->next = bp->next;
@@ -132,7 +157,7 @@ delete_hash_entry(struct hash_table *table, unsigned char *name, size_t len)
 }
 
 void *
-hash_lookup(struct hash_table *table, unsigned char *name, size_t len)
+hash_lookup(struct hash_table *table, const char *name, size_t len)
 {
 	int hashno;
 	struct hash_bucket *bp;
@@ -141,7 +166,7 @@ hash_lookup(struct hash_table *table, unsigned char *name, size_t len)
 		return (NULL);
 
 	if (!len)
-		len = strlen((char *)name);
+		len = strlen(name);
 
 	hashno = do_hash(name, len, table->hash_count);
 

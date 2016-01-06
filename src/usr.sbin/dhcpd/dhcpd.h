@@ -37,7 +37,31 @@
  * see ``http://www.vix.com/isc''.  To learn more about Vixie
  * Enterprises, see ``http://www.vix.com''.
  */
-
+/*
+ * Copyright (c) 2016 Henning Matyschok
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -95,9 +119,9 @@ struct iaddrlist {
 
 struct hash_bucket {
 	struct hash_bucket *next;
-	unsigned char *name;
+	const char *name;
 	size_t len;
-	unsigned char *value;
+	void *value;
 };
 
 struct hash_table {
@@ -479,8 +503,13 @@ typedef unsigned char option_mask[16];
 extern int bad_options;
 extern int bad_options_max;
 
-void	 parse_options(struct packet *);
-void	 parse_option_buffer(struct packet *, unsigned char *, int);
+void	parse_options(struct packet *);
+void	parse_option_buffer(struct packet *, unsigned char *, int);
+void	create_priority_list(unsigned char *, unsigned char *, int);
+int 	store_option_fragment(unsigned char *, int, unsigned char, 
+	int, unsigned char *);
+int 	store_options(unsigned char *, int, struct tree_cache **, 
+	unsigned char *, int, int);
 int	 cons_options(struct packet *, struct dhcp_packet *, int,
 	    struct tree_cache **, int, int, int, u_int8_t *, int);
 char	*pretty_print_option(unsigned int, unsigned char *, int, int, int);
@@ -673,11 +702,9 @@ void 	remove_protocol(struct protocol *);
 /* hash.c */
 struct hash_table *new_hash(void);
 
-void 	add_hash(struct hash_table *, unsigned char *, size_t, 
-	unsigned char *);
-void 	delete_hash_entry(struct hash_table *, 
-	unsigned char *, size_t);
-void * 	hash_lookup(struct hash_table *, unsigned char *, size_t);
+void 	add_hash(struct hash_table *, const char *, size_t, void *);
+void 	delete_hash_entry(struct hash_table *, const char *, size_t);
+void * 	hash_lookup(struct hash_table *, const char *, size_t);
 
 /* tables.c */
 extern struct option dhcp_options[256];

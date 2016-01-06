@@ -53,8 +53,6 @@ static struct lease *dangling_leases;
 static struct hash_table *vendor_class_hash;
 static struct hash_table *user_class_hash;
 
-extern int syncsend;
-
 void
 enter_host(struct host_decl *hd)
 {

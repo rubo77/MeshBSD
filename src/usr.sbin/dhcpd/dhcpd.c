@@ -61,17 +61,18 @@ int gotpipe = 0;
 int syncrecv;
 int syncsend;
 pid_t pfproc_pid = -1;
-char *path_dhcpd_conf = (char *)_PATH_DHCPD_CONF;
-char *path_dhcpd_db = (char *)_PATH_DHCPD_DB;
+char *path_dhcpd_conf = NULL;
+char *path_dhcpd_db = NULL;
 char *abandoned_tab = NULL;
 char *changedmac_tab = NULL;
 char *leased_tab = NULL;
+
+static char *progname;
 
 int
 main(int argc, char *argv[])
 {
 	int ch, cftest = 0, daemonize = 1, rdomain = -1, udpsockmode = 0;
-	extern char *__progname;
 	char *sync_iface = NULL;
 	char *sync_baddr = NULL;
 	u_short sync_port = 0;
@@ -80,6 +81,7 @@ main(int argc, char *argv[])
 
 	/* Initially, log errors to stderr as well as to syslogd. */
 
+	progname = argv[0]; /* XXX: yeah, ugly. */
 	opterr = 0;
 	while ((ch = getopt(argc, argv, "A:C:L:c:dfl:nu::Y:y:")) != -1)
 		switch (ch) {
@@ -96,7 +98,6 @@ main(int argc, char *argv[])
 			    "/etc/services");
 		sync_port = ntohs(ent->s_port);
 	}
-
 	udpaddr.s_addr = htonl(INADDR_BROADCAST);
 
 	optreset = optind = opterr = 1;
@@ -244,9 +245,7 @@ main(int argc, char *argv[])
 void
 usage(void)
 {
-	extern char *__progname;
-
-	(void)fprintf(stderr, "usage: %s [-dfn] [-A abandoned_ip_table]", __progname);
+	(void)fprintf(stderr, "usage: %s [-dfn] [-A abandoned_ip_table]", progname);
 	(void)fprintf(stderr, " [-C changed_ip_table]\n");
 	(void)fprintf(stderr, "\t[-c config-file] [-L leased_ip_table]");
 	(void)fprintf(stderr, " [-l lease-file] [-u[bind_address]]\n");
@@ -319,7 +318,6 @@ lease_ping_timeout(void *vlp)
 }
 
 /* from memory.c - needed to be able to walk the lease table */
-extern struct subnet *subnets;
 
 #define MINIMUM(a,b) (((a)<(b))?(a):(b))
 

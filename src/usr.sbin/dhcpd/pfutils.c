@@ -38,15 +38,8 @@
 
 #include "dhcpd.h"
 
-extern struct passwd *pw;
-extern int pfpipe[2];
-extern int gotpipe;
-extern char *abandoned_tab;
-extern char *changedmac_tab;
-extern char *leased_tab;
-
 void
-pftable_handler()
+pftable_handler(void)
 {
 	struct pf_cmd cmd;
 	struct pollfd pfd[1];

@@ -85,8 +85,10 @@ extern struct sockaddr_in sync_out;
 extern struct synchosts sync_hosts;
 
 extern int	 syncfd;
-extern int	 sync_init(const char *, const char *, u_short);
-extern int	 sync_addhost(const char *, u_short);
-extern void	 sync_recv(void);
-extern void	 sync_lease(struct lease *);
+
+void 	sync_send(struct iovec *, int);
+int	 sync_init(const char *, const char *, u_short);
+int	 sync_addhost(const char *, u_short);
+void	 sync_recv(void);
+void	 sync_lease(struct lease *);
 #endif /* _DHCPD_SYNC */

@@ -160,7 +160,8 @@ static void
 do_percentm(char *obuf, size_t size, const char *ibuf)
 {
 	char ch;
-	char *s = (char *)ibuf;
+	char *v = strdup(ibuf);
+	char *s = v;
 	char *t = obuf;
 	int prlen;
 	int fmt_left;
@@ -189,6 +190,7 @@ do_percentm(char *obuf, size_t size, const char *ibuf)
 		}
 	}
 	*t = '\0';
+	free(v);
 }
 
 int
@@ -198,6 +200,8 @@ parse_warn(const char *fmt, ...)
 	static char spaces[] =
 	    "                                        "
 	    "                                        "; /* 80 spaces */
+	static char new_line[] = "\n";
+	static char terminator[] = "^\n";
 	struct iovec iov[6];
 	size_t iovcnt;
 
@@ -210,17 +214,17 @@ parse_warn(const char *fmt, ...)
 	if (log_perror) {
 		iov[0].iov_base = mbuf;
 		iov[0].iov_len = strlen(mbuf);
-		iov[1].iov_base = (void *)"\n";
+		iov[1].iov_base = new_line;
 		iov[1].iov_len = 1;
 		iov[2].iov_base = token_line;
 		iov[2].iov_len = strlen(token_line);
-		iov[3].iov_base = (void *)"\n";
+		iov[3].iov_base = new_line;
 		iov[3].iov_len = 1;
 		iovcnt = 4;
 		if (lexchar < 81) {
 			iov[4].iov_base = spaces;
 			iov[4].iov_len = lexchar - 1;
-			iov[5].iov_base = (void *)"^\n";
+			iov[5].iov_base = terminator;
 			iov[5].iov_len = 2;
 			iovcnt += 2;
 		}

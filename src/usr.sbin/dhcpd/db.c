@@ -180,12 +180,18 @@ db_startup(void)
 {
 	int db_fd;
 
+	if (path_dhcpd_db == NULL)	
+		path_dhcpd_db = strdup(_PATH_DHCPD_DB);
+
 	/* open lease file. once we dropped privs it has to stay open */
 	db_fd = open(path_dhcpd_db, O_WRONLY|O_CREAT, 0640);
 	if (db_fd == -1)
 		error("Can't create new lease file: %m");
 	if ((db_file = fdopen(db_fd, "w")) == NULL)
 		error("Can't fdopen new lease file!");
+
+	free(path_dhcpd_db);
+	path_dhcpd_db = NULL;
 
 	/* Read in the existing lease file... */
 	read_leases();

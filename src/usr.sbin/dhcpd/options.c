@@ -47,15 +47,6 @@
 int bad_options = 0;
 int bad_options_max = 5;
 
-void	parse_options(struct packet *);
-void	parse_option_buffer(struct packet *, unsigned char *, int);
-void	create_priority_list(unsigned char *, unsigned char *, int);
-int 	store_option_fragment(unsigned char *, int, unsigned char, 
-	int, unsigned char *);
-int 	store_options(unsigned char *, int, struct tree_cache **, 
-	unsigned char *, int, int);
-
-
 /*
  * Parse all available options out of the specified packet.
  */

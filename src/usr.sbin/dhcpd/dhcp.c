@@ -45,6 +45,7 @@ int outstanding_pings;
 
 static char dhcp_message[256];
 
+
 void
 dhcp(struct packet *packet)
 {

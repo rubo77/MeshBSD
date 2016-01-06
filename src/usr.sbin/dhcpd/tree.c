@@ -178,26 +178,26 @@ tree_limit(struct tree *tree, size_t limit)
 }
 
 int
-tree_evaluate(struct tree_cache *tree_cache)
+tree_evaluate(struct tree_cache *tc)
 {
-	unsigned char	*bp = tree_cache->value;
-	int		 bc = tree_cache->buf_size;
+	unsigned char	*bp = tc->value;
+	int		 bc = tc->buf_size;
 	int		 bufix = 0;
 
 	/*
 	 * If there's no tree associated with this cache, it evaluates to a
 	 * constant and that was detected at startup.
 	 */
-	if (!tree_cache->tree)
+	if (!tc->tree)
 		return (1);
 
 	/* Try to evaluate the tree without allocating more memory... */
-	tree_cache->timeout = tree_evaluate_recurse(&bufix, &bp, &bc,
-	    tree_cache->tree);
+	tc->timeout = tree_evaluate_recurse(&bufix, &bp, &bc,
+	    tc->tree);
 
 	/* No additional allocation needed? */
 	if (bufix <= bc) {
-		tree_cache->len = bufix;
+		tc->len = bufix;
 		return (1);
 	}
 
@@ -220,18 +220,18 @@ tree_evaluate(struct tree_cache *tree_cache)
 	 * second call to tree_evaluate_recurse, since we haven't
 	 * changed the ``current'' time.
 	 */
-	tree_evaluate_recurse(&bufix, &bp, &bc, tree_cache->tree);
+	tree_evaluate_recurse(&bufix, &bp, &bc, tc->tree);
 
 	/*
 	 * Free the old buffer if needed, then store the new buffer
 	 * location and size and return.
 	 */
-	if (tree_cache->value)
-		free(tree_cache->value);
+	if (tc->value)
+		free(tc->value);
 	
-	tree_cache->value = bp;
-	tree_cache->len = bufix;
-	tree_cache->buf_size = bc;
+	tc->value = bp;
+	tc->len = bufix;
+	tc->buf_size = bc;
 	
 	return (1);
 }

@@ -45,8 +45,6 @@
 #include <poll.h>
 #include <net/if_media.h>
 
-extern int syncfd;
-
 struct interface_info *interfaces;
 struct protocol *protocols;
 struct dhcpd_timeout *timeouts;
