@@ -80,7 +80,7 @@ int sendmcast;
 struct sockaddr_in sync_in;
 struct sockaddr_in sync_out;
 
-static char *sync_key;
+static char *sync_key = NULL;
 
 int
 sync_addhost(const char *name, u_short port)
@@ -149,6 +149,11 @@ sync_init(const char *iface, const char *baddr, u_short port)
 	if (iface != NULL)
 		sendmcast++;
 
+	if (sync_key) {
+		free(sync_key);
+		sync_key = NULL;
+	}
+	
 	bzero(&ina, sizeof(ina));
 	if (baddr != NULL) {
 		if (inet_pton(AF_INET, baddr, &ina) != 1) {
@@ -264,6 +269,7 @@ fail2:
 	(void)close(syncfd);
 fail1:
 	free(sync_key);
+	sync_key = NULL;
 fail:
 	syncfd = -1;
 	goto out;
