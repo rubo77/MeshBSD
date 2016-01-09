@@ -34,13 +34,14 @@ options 	NO_FFS_SNAPSHOT		# We don't require snapshot support
 device		ether
 device		loop
 device 		pf
-options 	PPPOE_PFIL
+#options 	PPPOE_PFIL
 
 options 	IPSEC
 device  	crypto
-device 	random
+device 		random
 
-device 	if_bridge
+device 		if_bridge
+device 		gif
 
 device		md
 

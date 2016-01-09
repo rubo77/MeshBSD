@@ -36,3 +36,6 @@ options 	NETGRAPH
 options 	NETGRAPH_SOCKET
 options 	NETGRAPH_ETHER
 options 	NETGRAPH_PPPOE
+
+device 		tun
+
