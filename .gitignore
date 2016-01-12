@@ -99,6 +99,7 @@
 #
 # Standalone kernel modules.
 #
+!/src/sys/module/Makefie
 !/src/sys/modules/if_bridge/Makefile
 !/src/sys/modules/if_vether/Makefile
 

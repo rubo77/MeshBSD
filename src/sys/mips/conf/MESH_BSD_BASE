@@ -5,7 +5,7 @@
 #  -> looks a little bit chaotic (this changes soon).
 #
 
-makeoptions	MODULES_OVERRIDE="if_gif if_gre if_bridge bridgestp if_vlan"
+makeoptions	MODULES_OVERRIDE="if_gif if_gre if_bridge bridgestp if_vlan if_vether"
 
 options 	SCHED_4BSD		#4BSD scheduler
 options 	INET			#InterNETworking

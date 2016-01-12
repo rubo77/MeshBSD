@@ -50,7 +50,11 @@
 #include <sys/systm.h>
 #include <sys/sysctl.h>
 
+#include <sys/types.h>
+#include <sys/malloc.h>
+
 #include <net/if.h>
+#include <net/if_var.h>
 #include <net/if_arp.h>
 #include <net/if_clone.h>
 #include <net/if_media.h>
@@ -322,7 +326,6 @@ vether_start_locked(struct vether_softc	*sc, struct ifnet *ifp)
  * IAP for transmission.
  */				
 			ETHER_BPF_MTAP(ifp, m);
-			ifp->if_opackets++;	
 /* 
  * Discard any frame, if not if_bridge(4) member.
  */				
@@ -355,7 +358,6 @@ vether_start_locked(struct vether_softc	*sc, struct ifnet *ifp)
  * IAP for reception.
  */				
 			ETHER_BPF_MTAP(ifp, m);	
-			ifp->if_ipackets++;	
 /* 
  * Discard any frame, if monitoring is enabled.
  */		
