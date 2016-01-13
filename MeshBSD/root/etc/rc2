@@ -29,8 +29,7 @@
 
 #	$OpenBSD: rc,v 1.447 2015/01/22 19:00:24 krw Exp $
 
-start_daemon()
-{
+start_daemon() {
 	local _n
 	for _n; do
 		eval _do=\${${_n}_flags}
@@ -58,7 +57,7 @@ ifstart() {
 	if=$1
 	# Interface names must be alphanumeric only.  We check to avoid
 	# configuring backup or temp files, and to catch the "*" case.
-	[[ $if != +([[:alpha:]])+([[:digit:]]) ]] && return
+	[[ $if != +([[:alpha:]])+([[:digit:]]) ]] && return  --------------------- test(1) ----
 
 	file=/etc/hostname.$if
 	if ! [ -f $file ]; then
