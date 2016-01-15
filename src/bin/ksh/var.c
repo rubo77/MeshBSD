@@ -149,7 +149,7 @@ array_index_calc(const char *n, bool *arrayp, int *valp)
 		*valp = rval;
 		afree(sub, ATEMP);
 	}
-	return n;
+	return (n);
 }
 
 /*
@@ -185,11 +185,11 @@ global(const char *n)
 				/* setstr can't fail here */
 				setstr(vp, l->argv[num], KSH_RETURN_ERROR);
 			vp->flag |= RDONLY;
-			return vp;
+			return (vp);
 		}
 		vp->flag |= RDONLY;
 		if (n[1] != '\0')
-			return vp;
+			return (vp);
 		vp->flag |= ISSET|INTEGER;
 		switch (c) {
 		case '$':
@@ -213,15 +213,15 @@ global(const char *n)
 		default:
 			vp->flag &= ~(ISSET|INTEGER);
 		}
-		return vp;
+		return (vp);
 	}
 	for (l = e->loc; ; l = l->next) {
 		vp = ktsearch(&l->vars, n, h);
 		if (vp != NULL) {
 			if (array)
-				return arraysearch(vp, val);
+				return (arraysearch(vp, val));
 			else
-				return vp;
+				return (vp);
 		}
 		if (l->next == NULL)
 			break;
@@ -232,7 +232,7 @@ global(const char *n)
 	vp->flag |= DEFINED;
 	if (special(n))
 		vp->flag |= SPECIAL;
-	return vp;
+	return (vp);
 }
 
 /*
@@ -255,7 +255,7 @@ local(const char *n, bool copy)
 		vp->flag = DEFINED|RDONLY;
 		vp->type = 0;
 		vp->areap = ATEMP;
-		return vp;
+		return (vp);
 	}
 	vp = ktenter(&l->vars, n, h);
 	if (copy && !(vp->flag & DEFINED)) {
@@ -278,7 +278,7 @@ local(const char *n, bool copy)
 	vp->flag |= DEFINED;
 	if (special(n))
 		vp->flag |= SPECIAL;
-	return vp;
+	return (vp);
 }
 
 /* get variable string value */
@@ -330,7 +330,7 @@ str_val(struct tbl *vp)
 		else
 			s = str_save(s, ATEMP);
 	}
-	return s;
+	return (s);
 }
 
 /* get variable integer value, with error checking */
@@ -344,7 +344,7 @@ intval(struct tbl *vp)
 	if (base == -1)
 		/* XXX check calls - is error here ok by POSIX? */
 		errorf("%s: bad number", str_val(vp));
-	return num;
+	return (num);
 }
 
 /* set variable to string value */
@@ -358,7 +358,7 @@ setstr(struct tbl *vq, const char *s, int error_ok)
 		warningf(true, "%s: is read only", vq->name);
 		if (!error_ok)
 			errorf(null);
-		return 0;
+		return (0);
 	}
 	if (!(vq->flag&INTEGER)) { /* string dest */
 		if ((vq->flag&ALLOC)) {
@@ -382,14 +382,14 @@ setstr(struct tbl *vq, const char *s, int error_ok)
 		}
 	} else {		/* integer dest */
 		if (!v_evaluate(vq, s, error_ok, true))
-			return 0;
+			return (0);
 	}
 	vq->flag |= ISSET;
 	if ((vq->flag&SPECIAL))
 		setspec(vq);
 	if (fs)
 		afree((char *)fs, ATEMP);
-	return 1;
+	return (1);
 }
 
 /* set variable to integer */
@@ -424,10 +424,10 @@ getint(struct tbl *vp, long int *nump, bool arith)
 		getspec(vp);
 	/* XXX is it possible for ISSET to be set and val.s to be 0? */
 	if (!(vp->flag&ISSET) || (!(vp->flag&INTEGER) && vp->val.s == NULL))
-		return -1;
+		return (-1);
 	if (vp->flag&INTEGER) {
 		*nump = vp->val.i;
-		return vp->type;
+		return (vp->type);
 	}
 	s = vp->val.s + vp->type;
 	if (s == NULL)	/* redundant given initial test */
@@ -453,7 +453,7 @@ getint(struct tbl *vp, long int *nump, bool arith)
 		} else if (c == '#') {
 			base = (int) num;
 			if (have_base || base < 2 || base > 36)
-				return -1;
+				return (-1);
 			num = 0;
 			have_base = 1;
 		} else if (letnum(c)) {
@@ -466,15 +466,15 @@ getint(struct tbl *vp, long int *nump, bool arith)
 			else
 				c = -1; /* _: force error */
 			if (c < 0 || c >= base)
-				return -1;
+				return (-1);
 			num = num * base + c;
 		} else
-			return -1;
+			return (-1);
 	}
 	if (neg)
 		num = -num;
 	*nump = num;
-	return base;
+	return (base);
 }
 
 /* convert variable vq to integer variable, setting its value from vp
@@ -487,7 +487,7 @@ setint_v(struct tbl *vq, struct tbl *vp, bool arith)
 	long num;
 
 	if ((base = getint(vp, &num, arith)) == -1)
-		return NULL;
+		return (NULL);
 	if (!(vq->flag & INTEGER) && (vq->flag & ALLOC)) {
 		vq->flag &= ~ALLOC;
 		afree(vq->val.s, vq->areap);
@@ -498,7 +498,7 @@ setint_v(struct tbl *vq, struct tbl *vp, bool arith)
 	vq->flag |= ISSET|INTEGER;
 	if (vq->flag&SPECIAL)
 		setspec(vq);
-	return vq;
+	return (vq);
 }
 
 static char *
@@ -557,7 +557,7 @@ formatstr(struct tbl *vp, const char *s)
 				*q = tolower((unsigned char)*q);
 	}
 
-	return p;
+	return (p);
 }
 
 /*
@@ -598,13 +598,13 @@ typeset(const char *var, Tflag set, Tflag clr, int field, int base)
 	/* check for valid variable name, search for value */
 	val = skip_varname(var, false);
 	if (val == var)
-		return NULL;
+		return (NULL);
 	if (*val == '[') {
 		int len;
 
 		len = array_ref_len(val);
 		if (len == 0)
-			return NULL;
+			return (NULL);
 		/* IMPORT is only used when the shell starts up and is
 		 * setting up its environment.  Allow only simple array
 		 * references at this time since parameter/command substitution
@@ -615,7 +615,7 @@ typeset(const char *var, Tflag set, Tflag clr, int field, int base)
 			int i;
 			for (i = 1; i < len - 1; i++)
 				if (!digit(val[i]))
-					return NULL;
+					return (NULL);
 		}
 		val += len;
 	}
@@ -624,7 +624,7 @@ typeset(const char *var, Tflag set, Tflag clr, int field, int base)
 	else {
 		/* Importing from original environment: must have an = */
 		if (set & IMPORT)
-			return NULL;
+			return (NULL);
 		tvar = (char *) var;
 		val = NULL;
 	}
@@ -731,7 +731,7 @@ typeset(const char *var, Tflag set, Tflag clr, int field, int base)
 	    vpbase->type == 0)
 		export(vpbase, (vpbase->flag&ISSET) ? vpbase->val.s : null);
 
-	return vp;
+	return (vp);
 }
 
 /* Unset a variable.  array_ref is set if there was an array reference in
@@ -776,7 +776,7 @@ skip_varname(const char *s, int aok)
 		if (aok && *s == '[' && (alen = array_ref_len(s)))
 			s += alen;
 	}
-	return (char *) s;
+	return ((char *) s);
 }
 
 /* Return a pointer to the first character past any legal variable name.  */
@@ -808,7 +808,7 @@ skip_wdvarname(const char *s,
 			}
 		}
 	}
-	return (char *) s;
+	return ((char *) s);
 }
 
 /* Check if coded string s is a variable name */
@@ -817,7 +817,7 @@ is_wdvarname(const char *s, int aok)
 {
 	char *p = skip_wdvarname(s, aok);
 
-	return p != s && p[0] == EOS;
+	return (p != s && p[0] == EOS);
 }
 
 /* Check if coded string s is a variable assignment */
@@ -826,7 +826,7 @@ is_wdvarassign(const char *s)
 {
 	char *p = skip_wdvarname(s, true);
 
-	return p != s && p[0] == CHAR && p[1] == '=';
+	return (p != s && p[0] == CHAR && p[1] == '=');
 }
 
 /*
@@ -866,7 +866,7 @@ makenv(void)
 				XPput(env, vp->val.s);
 			}
 	XPput(env, NULL);
-	return (char **) XPclose(env);
+	return ((char **) XPclose(env));
 }
 
 /*
@@ -891,7 +891,7 @@ special(const char *name)
 	struct tbl *tp;
 
 	tp = ktsearch(&specials, name, hash(name));
-	return tp && (tp->flag & ISSET) ? tp->type : V_NONE;
+	return (tp && (tp->flag & ISSET) ? tp->type : V_NONE);
 }
 
 /* Make a variable non-special */
@@ -1109,7 +1109,7 @@ arraysearch(struct tbl *vp, int val)
 	vp->index = 0;
 	/* The table entry is always [0] */
 	if (val == 0)
-		return vp;
+		return (vp);
 	prev = vp;
 	curr = vp->u.array;
 	while (curr && curr->index < val) {
@@ -1118,7 +1118,7 @@ arraysearch(struct tbl *vp, int val)
 	}
 	if (curr && curr->index == val) {
 		if (curr->flag&ISSET)
-			return curr;
+			return (curr);
 		else
 			new = curr;
 	} else
@@ -1134,7 +1134,7 @@ arraysearch(struct tbl *vp, int val)
 		prev->u.array = new;
 		new->u.array = curr;
 	}
-	return new;
+	return (new);
 }
 
 /* Return the length of an array reference (eg, [1+2]) - cp is assumed
@@ -1152,8 +1152,8 @@ array_ref_len(const char *cp)
 		if (c == '[')
 			depth++;
 	if (!c)
-		return 0;
-	return s - cp;
+		return (0);
+	return (s - cp);
 }
 
 /*
@@ -1166,9 +1166,9 @@ arrayname(const char *str)
 
 	if ((p = strchr(str, '[')) == 0)
 		/* Shouldn't happen, but why worry? */
-		return (char *) str;
+		return ((char *) str);
 
-	return str_nsave(str, p - str, ATEMP);
+	return (str_nsave(str, p - str, ATEMP));
 }
 
 /* Set (or overwrite, if !reset) the array variable var to the values in vals.

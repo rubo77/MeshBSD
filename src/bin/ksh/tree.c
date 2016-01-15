@@ -376,7 +376,7 @@ snptreef(char *s, int n, const char *fmt, ...)
   vfptreef(&shf, 0, fmt, va);
   va_end(va);
 
-  return shf_sclose(&shf); /* null terminates */
+  return (shf_sclose(&shf)); /* null terminates */
 }
 
 static void
@@ -455,7 +455,7 @@ tcopy(struct op *t, Area *ap)
 	char **tw, **rw;
 
 	if (t == NULL)
-		return NULL;
+		return (NULL);
 
 	r = (struct op *) alloc(sizeof(struct op), ap);
 
@@ -494,14 +494,14 @@ tcopy(struct op *t, Area *ap)
 	r->right = tcopy(t->right, ap);
 	r->lineno = t->lineno;
 
-	return r;
+	return (r);
 }
 
 char *
 wdcopy(const char *wp, Area *ap)
 {
 	size_t len = wdscan(wp, EOS) - wp;
-	return memcpy(alloc(len, ap), wp, len);
+	return (memcpy(alloc(len, ap), wp, len));
 }
 
 /* return the position of prefix c in wp plus 1 */
@@ -513,7 +513,7 @@ wdscan(const char *wp, int c)
 	while (1)
 		switch (*wp++) {
 		case EOS:
-			return (char *) wp;
+			return ((char *) wp);
 		case CHAR:
 		case QCHAR:
 			wp++;
@@ -534,7 +534,7 @@ wdscan(const char *wp, int c)
 		case CSUBST:
 			wp++;
 			if (c == CSUBST && nest == 0)
-				return (char *) wp;
+				return ((char *) wp);
 			nest--;
 			break;
 		case OPAT:
@@ -544,7 +544,7 @@ wdscan(const char *wp, int c)
 		case SPAT:
 		case CPAT:
 			if (c == wp[-1] && nest == 0)
-				return (char *) wp;
+				return ((char *) wp);
 			if (wp[-1] == CPAT)
 				nest--;
 			break;
@@ -650,7 +650,7 @@ iocopy(struct ioword **iow, Area *ap)
 	}
 	ior[i] = NULL;
 
-	return ior;
+	return (ior);
 }
 
 /*

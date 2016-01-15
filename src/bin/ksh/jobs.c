@@ -397,12 +397,12 @@ exchild(struct op *t, int flags, volatile int *xerrok,
 	int		forksleep;
 	int		ischild;
 
-	if (flags & XEXEC)
+	if (flags & XEXEC) {
 		/* Clear XFORK|XPCLOSE|XCCLOSE|XCOPROC|XPIPEO|XPIPEI|XXCOM|XBGND
 		 * (also done in another execute() below)
 		 */
-		return execute(t, flags & (XEXEC | XERROK), xerrok);
-
+		return (execute(t, flags & (XEXEC | XERROK), xerrok));
+	}
 	/* no SIGCHLD's while messing with job and process lists */
 	sigprocmask(SIG_BLOCK, &sm_sigchld, &omask);
 
@@ -568,7 +568,7 @@ exchild(struct op *t, int flags, volatile int *xerrok,
 
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 
-	return rv;
+	return (rv);
 }
 
 /* start the last job: only used for `command` jobs */
@@ -604,14 +604,14 @@ waitlast(void)
 		else
 			internal_errorf(0, "waitlast: not started");
 		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-		return 125; /* not so arbitrary, non-zero value */
+		return (125); /* not so arbitrary, non-zero value */
 	}
 
 	rv = j_waitj(j, JW_NONE, "jw:waitlast");
 
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 
-	return rv;
+	return (rv);
 }
 
 /* wait for child, interruptable. */
@@ -638,20 +638,20 @@ waitfor(const char *cp, int *sigp)
 				break;
 		if (!j) {
 			sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-			return -1;
+			return (-1);
 		}
 	} else if ((j = j_lookup(cp, &ecode))) {
 		/* don't report normal job completion */
 		flags &= ~JW_ASYNCNOTIFY;
 		if (j->ppid != procpid) {
 			sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-			return -1;
+			return (-1);
 		}
 	} else {
 		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 		if (ecode != JL_NOSUCH)
 			bi_errorf("%s: %s", cp, lookup_msgs[ecode]);
-		return -1;
+		return (-1);
 	}
 
 	/* at&t ksh will wait for stopped jobs - we don't */
@@ -662,7 +662,7 @@ waitfor(const char *cp, int *sigp)
 	if (rv < 0) /* we were interrupted */
 		*sigp = 128 + -rv;
 
-	return rv;
+	return (rv);
 }
 
 /* kill (built-in) a job */
@@ -679,7 +679,7 @@ j_kill(const char *cp, int sig)
 	if ((j = j_lookup(cp, &ecode)) == (Job *) 0) {
 		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 		bi_errorf("%s: %s", cp, lookup_msgs[ecode]);
-		return 1;
+		return (1);
 	}
 
 	if (j->pgrp == 0) {	/* started when !Flag(FMONITOR) */
@@ -700,7 +700,7 @@ j_kill(const char *cp, int sig)
 
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 
-	return rv;
+	return (rv);
 }
 
 #ifdef JOBS
@@ -720,13 +720,13 @@ j_resume(const char *cp, int bg)
 	if ((j = j_lookup(cp, &ecode)) == (Job *) 0) {
 		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 		bi_errorf("%s: %s", cp, lookup_msgs[ecode]);
-		return 1;
+		return (1);
 	}
 
 	if (j->pgrp == 0) {
 		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 		bi_errorf("job not job-controlled");
-		return 1;
+		return (1);
 	}
 
 	if (bg)
@@ -768,7 +768,7 @@ j_resume(const char *cp, int bg)
 				    (int) ((j->flags & JF_SAVEDTTYPGRP) ?
 				    j->saved_ttypgrp : j->pgrp),
 				    strerror(errno));
-				return 1;
+				return (1);
 			}
 		}
 # endif /* JOBS */
@@ -797,7 +797,7 @@ j_resume(const char *cp, int bg)
 		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 		bi_errorf("cannot continue job %s: %s",
 		    cp, strerror(err));
-		return 1;
+		return (1);
 	}
 	if (!bg) {
 # ifdef JOBS
@@ -808,7 +808,7 @@ j_resume(const char *cp, int bg)
 		rv = j_waitj(j, JW_NONE, "jw:resume");
 	}
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-	return rv;
+	return (rv);
 }
 #endif /* JOBS */
 
@@ -833,10 +833,10 @@ j_stopped_running(void)
 		    which & 1 ? "stopped" : "",
 		    which == 3 ? " and " : "",
 		    which & 2 ? "running" : "");
-		return 1;
+		return (1);
 	}
 
-	return 0;
+	return (0);
 }
 
 int
@@ -851,7 +851,7 @@ j_njobs(void)
 		nj++;
 
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-	return nj;
+	return (nj);
 }
 
 
@@ -877,7 +877,7 @@ j_jobs(const char *cp, int slp,
 		if ((j = j_lookup(cp, &ecode)) == (Job *) 0) {
 			sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 			bi_errorf("%s: %s", cp, lookup_msgs[ecode]);
-			return 1;
+			return (1);
 		}
 	} else
 		j = job_list;
@@ -899,7 +899,7 @@ j_jobs(const char *cp, int slp,
 			remove_job(j, "jobs");
 	}
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-	return 0;
+	return (0);
 }
 
 /* list jobs for top-level notification */
@@ -943,7 +943,7 @@ j_async(void)
 
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
 
-	return async_pid;
+	return (async_pid);
 }
 
 /* Make j the last async process
@@ -1036,7 +1036,7 @@ j_waitj(Job *j,
 		}
 		if ((flags & JW_INTERRUPT) && (rv = trap_pending())) {
 			j->flags &= ~(JF_WAITING|JF_W_ASYNCNOTIFY);
-			return -rv;
+			return (-rv);
 		}
 	}
 	j->flags &= ~(JF_WAITING|JF_W_ASYNCNOTIFY);
@@ -1129,7 +1129,7 @@ j_waitj(Job *j,
 	    (!Flag(FMONITOR) || !(flags & JW_ASYNCNOTIFY)))
 		remove_job(j, where);
 
-	return rv;
+	return (rv);
 }
 
 /* SIGCHLD handler to reap children and update job states
@@ -1436,33 +1436,33 @@ j_lookup(const char *cp, int *ecodep)
 		/* Look for last_proc->pid (what $! returns) first... */
 		for (j = job_list; j != (Job *) 0; j = j->next)
 			if (j->last_proc && j->last_proc->pid == job)
-				return j;
+				return (j);
 		/* ...then look for process group (this is non-POSIX),
 		 * but should not break anything (so FPOSIX isn't used).
 		 */
 		for (j = job_list; j != (Job *) 0; j = j->next)
 			if (j->pgrp && j->pgrp == job)
-				return j;
+				return (j);
 		if (ecodep)
 			*ecodep = JL_NOSUCH;
-		return (Job *) 0;
+		return ((Job *) 0);
 	}
 	if (*cp != '%') {
 		if (ecodep)
 			*ecodep = JL_INVALID;
-		return (Job *) 0;
+		return ((Job *) 0);
 	}
 	switch (*++cp) {
 	case '\0': /* non-standard */
 	case '+':
 	case '%':
 		if (job_list != (Job *) 0)
-			return job_list;
+			return (job_list);
 		break;
 
 	case '-':
 		if (job_list != (Job *) 0 && job_list->next)
-			return job_list->next;
+			return (job_list->next);
 		break;
 
 	case '0': case '1': case '2': case '3': case '4':
@@ -1470,7 +1470,7 @@ j_lookup(const char *cp, int *ecodep)
 		job = atoi(cp);
 		for (j = job_list; j != (Job *) 0; j = j->next)
 			if (j->job == job)
-				return j;
+				return (j);
 		break;
 
 	case '?':		/* %?string */
@@ -1481,7 +1481,7 @@ j_lookup(const char *cp, int *ecodep)
 					if (last_match) {
 						if (ecodep)
 							*ecodep = JL_AMBIG;
-						return (Job *) 0;
+						return ((Job *) 0);
 					}
 					last_match = j;
 				}
@@ -1497,17 +1497,17 @@ j_lookup(const char *cp, int *ecodep)
 				if (last_match) {
 					if (ecodep)
 						*ecodep = JL_AMBIG;
-					return (Job *) 0;
+					return ((Job *) 0);
 				}
 				last_match = j;
 			}
 		if (last_match)
-			return last_match;
+			return (last_match);
 		break;
 	}
 	if (ecodep)
 		*ecodep = JL_NOSUCH;
-	return (Job *) 0;
+	return ((Job *) 0);
 }
 
 static Job	*free_jobs;
@@ -1538,7 +1538,7 @@ new_job(void)
 	}
 	newj->job = i;
 
-	return newj;
+	return (newj);
 }
 
 /* Allocate new process struct
@@ -1556,7 +1556,7 @@ new_proc(void)
 	} else
 		p = (Proc *) alloc(sizeof(Proc), APERM);
 
-	return p;
+	return (p);
 }
 
 /* Take job out of job_list and put old structures into free list.
@@ -1649,5 +1649,5 @@ kill_job(Job *j, int sig)
 		if (p->pid != 0)
 			if (kill(p->pid, sig) < 0)
 				rval = -1;
-	return rval;
+	return (rval);
 }

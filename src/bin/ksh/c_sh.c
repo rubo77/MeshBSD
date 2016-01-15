@@ -1,3 +1,29 @@
+/*
+ * Copyright (c) 2016 Henning Matyschok
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /*	$OpenBSD: c_sh.c,v 1.45 2014/08/27 08:26:04 jmc Exp $	*/
 
 /*
@@ -9,13 +35,27 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+extern struct timeval j_usrtime, j_systime; /* computed by j_wait */
+
+extern char *c_typeset_cmd;  
+extern char *c_typeset_options; 
+
+extern char *c_read_reply;
+
+extern char *p_time_ws;
+extern char *p_time_nl;
+extern char *p_time_real;
+extern char *p_time_user;
+extern char *p_time_sys;
+extern char *p_time_system_nl;
+
 static void p_time(struct shf *, int, struct timeval *, int, char *, char *);
 
 /* :, false and true */
 int
 c_label(char **wp)
 {
-	return wp[0][0] == 'f' ? 1 : 0;
+	return (wp[0][0] == 'f' ? 1 : 0);
 }
 
 int
@@ -27,7 +67,7 @@ c_shift(char **wp)
 	char *arg;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	arg = wp[builtin_opt.optind];
 
 	if (arg) {
@@ -46,7 +86,7 @@ c_shift(char **wp)
 	l->argv[n] = l->argv[0];
 	l->argv += n;
 	l->argc -= n;
-	return 0;
+	return (0);
 }
 
 int
@@ -64,7 +104,7 @@ c_umask(char **wp)
 			symbolic = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	cp = wp[builtin_opt.optind];
 	if (cp == NULL) {
@@ -96,7 +136,7 @@ c_umask(char **wp)
 				new_umask = new_umask * 8 + (*cp - '0');
 			if (*cp) {
 				bi_errorf("bad number");
-				return 1;
+				return (1);
 			}
 		} else {
 			/* symbolic format */
@@ -167,13 +207,13 @@ c_umask(char **wp)
 			}
 			if (*cp) {
 				bi_errorf("bad mask");
-				return 1;
+				return (1);
 			}
 			new_umask = ~new_umask;
 		}
 		umask(new_umask);
 	}
-	return 0;
+	return (0);
 }
 
 int
@@ -186,14 +226,14 @@ c_dot(char **wp)
 	int err;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 
 	if ((cp = wp[builtin_opt.optind]) == NULL)
-		return 0;
+		return (0);
 	file = search(cp, path, R_OK, &err);
 	if (file == NULL) {
 		bi_errorf("%s: %s", cp, err ? strerror(err) : "not found");
-		return 1;
+		return (1);
 	}
 
 	/* Set positional parameters? */
@@ -209,9 +249,9 @@ c_dot(char **wp)
 	i = include(file, argc, argv, 0);
 	if (i < 0) { /* should not happen */
 		bi_errorf("%s: %s", cp, strerror(errno));
-		return 1;
+		return (1);
 	}
-	return i;
+	return (i);
 }
 
 int
@@ -221,7 +261,7 @@ c_wait(char **wp)
 	int sig;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	wp += builtin_opt.optind;
 	if (*wp == (char *) 0) {
 		while (waitfor((char *) 0, &sig) >= 0)
@@ -233,14 +273,14 @@ c_wait(char **wp)
 		if (rv < 0)
 			rv = sig ? sig : 127; /* magic exit code: bad job-id */
 	}
-	return rv;
+	return (rv);
 }
 
 int
 c_read(char **wp)
 {
 	int c = 0;
-	int expand = 1, history = 0;
+	int _expand = 1, _history = 0;
 	int expanding;
 	int ecode = 0;
 	char *cp;
@@ -257,30 +297,30 @@ c_read(char **wp)
 		case 'p':
 			if ((fd = coproc_getfd(R_OK, &emsg)) < 0) {
 				bi_errorf("-p: %s", emsg);
-				return 1;
+				return (1);
 			}
 			break;
 		case 'r':
-			expand = 0;
+			_expand = 0;
 			break;
 		case 's':
-			history = 1;
+			_history = 1;
 			break;
 		case 'u':
 			if (!*(cp = builtin_opt.optarg))
 				fd = 0;
 			else if ((fd = check_fd(cp, R_OK, &emsg)) < 0) {
 				bi_errorf("-u: %s: %s", cp, emsg);
-				return 1;
+				return (1);
 			}
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 
 	if (*wp == NULL)
-		*--wp = "REPLY";
+		*--wp = c_read_reply;
 
 	/* Since we can't necessarily seek backwards on non-regular files,
 	 * don't buffer them so we can't read too much.
@@ -310,7 +350,7 @@ c_read(char **wp)
 	 * coproc_readw_close(fd);
 	 */
 
-	if (history)
+	if (_history)
 		Xinit(xs, xp, 128, ATEMP);
 	expanding = 0;
 	Xinit(cs, cp, 128, ATEMP);
@@ -338,7 +378,7 @@ c_read(char **wp)
 				}
 				break;
 			}
-			if (history) {
+			if (_history) {
 				Xcheck(xs, xp);
 				Xput(xs, xp, c);
 			}
@@ -358,7 +398,7 @@ c_read(char **wp)
 					Xput(cs, cp, c);
 				continue;
 			}
-			if (expand && c == '\\') {
+			if (_expand && c == '\\') {
 				expanding = 1;
 				continue;
 			}
@@ -383,18 +423,18 @@ c_read(char **wp)
 		if (vp->flag & RDONLY) {
 			shf_flush(shf);
 			bi_errorf("%s is read only", *wp);
-			return 1;
+			return (1);
 		}
 		if (Flag(FEXPORT))
 			typeset(*wp, EXPORT, 0, 0, 0);
 		if (!setstr(vp, Xstring(cs, cp), KSH_RETURN_ERROR)) {
 		    shf_flush(shf);
-		    return 1;
+		    return (1);
 		}
 	}
 
 	shf_flush(shf);
-	if (history) {
+	if (_history) {
 		Xput(xs, xp, '\0');
 		source->line++;
 		histsave(source->line, Xstring(xs, xp), 1);
@@ -407,7 +447,7 @@ c_read(char **wp)
 	if (c == EOF && !ecode)
 		coproc_read_close(fd);
 
-	return ecode ? ecode : c == EOF;
+	return (ecode ? ecode : c == EOF);
 }
 
 int
@@ -417,7 +457,7 @@ c_eval(char **wp)
 	int rv;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	s = pushs(SWORDS, ATEMP);
 	s->u.strv = wp + builtin_opt.optind;
 	if (!Flag(FPOSIX)) {
@@ -461,7 +501,7 @@ c_trap(char **wp)
 	Trap *p;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	wp += builtin_opt.optind;
 
 	if (*wp == NULL) {
@@ -472,7 +512,7 @@ c_trap(char **wp)
 				shprintf(" %s\n", p->name);
 			}
 		}
-		return 0;
+		return (0);
 	}
 
 	/*
@@ -489,11 +529,11 @@ c_trap(char **wp)
 		p = gettrap(*wp++, true);
 		if (p == NULL) {
 			bi_errorf("bad signal %s", wp[-1]);
-			return 1;
+			return (1);
 		}
 		settrap(p, s);
 	}
-	return 0;
+	return (0);
 }
 
 int
@@ -504,7 +544,7 @@ c_exitreturn(char **wp)
 	char *arg;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	arg = wp[builtin_opt.optind];
 
 	if (arg) {
@@ -535,7 +575,7 @@ c_exitreturn(char **wp)
 	quitenv(NULL);	/* get rid of any i/o redirections */
 	unwind(how);
 	/* NOTREACHED */
-	return 0;
+	return (0);
 }
 
 int
@@ -546,18 +586,18 @@ c_brkcont(char **wp)
 	char *arg;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	arg = wp[builtin_opt.optind];
 
 	if (!arg)
 		n = 1;
 	else if (!bi_getn(arg, &n))
-		return 1;
+		return (1);
 	quit = n;
 	if (quit <= 0) {
 		/* at&t ksh does this for non-interactive shells only - weird */
 		bi_errorf("%s: bad value", arg);
-		return 1;
+		return (1);
 	}
 
 	/* Stop at E_NONE, E_PARSE, E_FUNC, or E_INCL */
@@ -576,7 +616,7 @@ c_brkcont(char **wp)
 		 */
 		if (n == quit) {
 			warningf(true, "%s: cannot %s", wp[0], wp[0]);
-			return 0;
+			return (0);
 		}
 		/* POSIX says if n is too big, the last enclosing loop
 		 * shall be used.  Doesn't say to print an error but we
@@ -600,13 +640,17 @@ c_set(char **wp)
 	char **owp = wp;
 
 	if (wp[1] == NULL) {
-		static const char *const args [] = { "set", "-", NULL };
-		return c_typeset((char **) args);
+		char *c_typeset_argv[] = {
+			c_typeset_cmd,
+			c_typeset_options,
+			NULL,
+		};
+		return (c_typeset(c_typeset_argv));
 	}
 
 	argi = parse_args(wp, OF_SET, &setargs);
 	if (argi < 0)
-		return 1;
+		return (1);
 	/* set $# and $* */
 	if (setargs) {
 		owp = wp += argi - 1;
@@ -624,7 +668,7 @@ c_set(char **wp)
 	 * (subst_exstat is cleared in execute() so that it will be 0
 	 * if there are no command substitutions).
 	 */
-	return Flag(FPOSIX) ? 0 : subst_exstat;
+	return (Flag(FPOSIX) ? 0 : subst_exstat);
 }
 
 int
@@ -642,7 +686,7 @@ c_unset(char **wp)
 			unset_var = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 	for (; (id = *wp) != NULL; wp++)
@@ -651,13 +695,13 @@ c_unset(char **wp)
 
 			if ((vp->flag&RDONLY)) {
 				bi_errorf("%s is read only", vp->name);
-				return 1;
+				return (1);
 			}
 			unset(vp, strchr(id, '[') ? 1 : 0);
 		} else {		/* unset function */
 			define(id, (struct op *) NULL);
 		}
-	return 0;
+	return (0);
 }
 
 static void
@@ -675,21 +719,21 @@ p_time(struct shf *shf, int posix, struct timeval *tv, int width, char *prefix,
 }
 
 int
-c_times(char **wp)
+c_times(char **wp __unused)
 {
 	struct rusage usage;
 
 	(void) getrusage(RUSAGE_SELF, &usage);
-	p_time(shl_stdout, 0, &usage.ru_utime, 0, NULL, " ");
-	p_time(shl_stdout, 0, &usage.ru_stime, 0, NULL, "\n");
+	p_time(shl_stdout, 0, &usage.ru_utime, 0, NULL, p_time_ws);
+	p_time(shl_stdout, 0, &usage.ru_stime, 0, NULL, p_time_nl);
 
 	(void) getrusage(RUSAGE_CHILDREN, &usage);
-	p_time(shl_stdout, 0, &usage.ru_utime, 0, NULL, " ");
-	p_time(shl_stdout, 0, &usage.ru_stime, 0, NULL, "\n");
+	p_time(shl_stdout, 0, &usage.ru_utime, 0, NULL, p_time_ws);
+	p_time(shl_stdout, 0, &usage.ru_stime, 0, NULL, p_time_nl);
 
-	return 0;
+	return (0);
 }
-
+	
 /*
  * time pipeline (really a statement, not a built-in command)
  */
@@ -703,7 +747,6 @@ timex(struct op *t, int f, volatile int *xerrok)
 	struct rusage ru0, ru1, cru0, cru1;
 	struct timeval usrtime, systime, tv0, tv1;
 	int tf = 0;
-	extern struct timeval j_usrtime, j_systime; /* computed by j_wait */
 
 	gettimeofday(&tv0, NULL);
 	getrusage(RUSAGE_SELF, &ru0);
@@ -742,21 +785,21 @@ timex(struct op *t, int f, volatile int *xerrok)
 	if (!(tf & TF_NOREAL)) {
 		timersub(&tv1, &tv0, &tv1);
 		if (tf & TF_POSIX)
-			p_time(shl_out, 1, &tv1, 5, "real ", "\n");
+			p_time(shl_out, 1, &tv1, 5, p_time_real, p_time_nl);
 		else
-			p_time(shl_out, 0, &tv1, 5, NULL, " real ");
+			p_time(shl_out, 0, &tv1, 5, NULL, p_time_real);
 	}
 	if (tf & TF_POSIX)
-		p_time(shl_out, 1, &usrtime, 5, "user ", "\n");
+		p_time(shl_out, 1, &usrtime, 5, p_time_user, p_time_nl);
 	else
-		p_time(shl_out, 0, &usrtime, 5, NULL, " user ");
+		p_time(shl_out, 0, &usrtime, 5, NULL, p_time_user);
 	if (tf & TF_POSIX)
-		p_time(shl_out, 1, &systime, 5, "sys  ", "\n");
+		p_time(shl_out, 1, &systime, 5, p_time_sys, p_time_nl);
 	else
-		p_time(shl_out, 0, &systime, 5, NULL, " system\n");
+		p_time(shl_out, 0, &systime, 5, NULL, p_time_system_nl);
 	shf_flush(shl_out);
 
-	return rv;
+	return (rv);
 }
 
 void
@@ -794,7 +837,7 @@ timex_hook(struct op *t, char **volatile *app)
 
 /* exec with no args - args case is taken care of in comexec() */
 int
-c_exec(char **wp)
+c_exec(char **wp  __unused)
 {
 	int i;
 
@@ -814,7 +857,7 @@ c_exec(char **wp)
 		}
 		e->savefd = NULL;
 	}
-	return 0;
+	return (0);
 }
 
 static int
@@ -831,7 +874,7 @@ c_mknod(char **wp)
 			set = setmode(builtin_opt.optarg);
 			if (set == NULL) {
 				bi_errorf("invalid file mode");
-				return 1;
+				return (1);
 			}
 			mode = getmode(set, DEFFILEMODE);
 			free(set);
@@ -863,12 +906,12 @@ c_mknod(char **wp)
 
 	if (set)
 		umask(oldmode);
-	return ret;
+	return (ret);
 usage:
 	builtin_argv0 = NULL;
 	bi_errorf("usage: mknod [-m mode] name b|c major minor");
 	bi_errorf("usage: mknod [-m mode] name p");
-	return 1;
+	return (1);
 }
 
 static int
@@ -876,7 +919,7 @@ c_suspend(char **wp)
 {
 	if (wp[1] != NULL) {
 		bi_errorf("too many arguments");
-		return 1;
+		return (1);
 	}
 	if (Flag(FLOGIN)) {
 		/* Can't suspend an orphaned process group. */
@@ -884,22 +927,19 @@ c_suspend(char **wp)
 		if (getpgid(parent) == getpgid(0) ||
 		    getsid(parent) != getsid(0)) {
 			bi_errorf("can't suspend a login shell");
-			return 1;
+			return (1);
 		}
 	}
 	j_suspend();
-	return 0;
+	return (0);
 }
 
 /* dummy function, special case in comexec() */
 int
-c_builtin(char **wp)
+c_builtin(char **wp __unused)
 {
-	return 0;
+	return (0);
 }
-
-extern	int c_test(char **wp);			/* in c_test.c */
-extern	int c_ulimit(char **wp);		/* in c_ulimit.c */
 
 /* A leading = means assignments before command are kept;
  * a leading * means a POSIX special builtin;

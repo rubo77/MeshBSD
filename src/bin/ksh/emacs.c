@@ -310,7 +310,7 @@ x_emacs(char *buf, size_t len)
 	while (1) {
 		x_flush();
 		if ((c = x_e_getc()) < 0)
-			return 0;
+			return (0);
 
 		line[at++] = c;
 		line[at] = '\0';
@@ -402,19 +402,19 @@ x_insert(int c)
 	 */
 	if (c == 0) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	str[0] = c;
 	str[1] = '\0';
 	while (x_arg--)
 		x_ins(str);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_ins_string(int c)
 {
-	return x_insert(c);
+	return (x_insert(c));
 }
 
 static int x_do_ins(const char *cp, int len);
@@ -424,14 +424,14 @@ x_do_ins(const char *cp, int len)
 {
 	if (xep+len >= xend) {
 		x_e_putc(BEL);
-		return -1;
+		return (-1);
 	}
 
 	memmove(xcp+len, xcp, xep - xcp + 1);
 	memmove(xcp, cp, len);
 	xcp += len;
 	xep += len;
-	return 0;
+	return (0);
 }
 
 static int
@@ -441,7 +441,7 @@ x_ins(char *s)
 	int	adj = x_adj_done;
 
 	if (x_do_ins(s, strlen(s)) < 0)
-		return -1;
+		return (-1);
 	/*
 	 * x_zots() may result in a call to x_adjust()
 	 * we want xcp to reflect the new position.
@@ -457,7 +457,7 @@ x_ins(char *s)
 	}
 
 	x_adj_ok = 1;
-	return 0;
+	return (0);
 }
 
 /*
@@ -480,13 +480,13 @@ x_del_back(int c)
 
 	if (col == 0) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	if (x_arg > col)
 		x_arg = col;
 	x_goto(xcp - x_arg);
 	x_delete(x_arg, false);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -496,12 +496,12 @@ x_del_char(int c)
 
 	if (!nleft) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	if (x_arg > nleft)
 		x_arg = nleft;
 	x_delete(x_arg, false);
-	return KSTD;
+	return (KSTD);
 }
 
 /* Delete nc chars to the right of the cursor (including cursor position) */
@@ -563,28 +563,28 @@ static int
 x_del_bword(int c)
 {
 	x_delete(x_bword(), true);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_mv_bword(int c)
 {
 	(void)x_bword();
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_mv_fword(int c)
 {
 	x_goto(xcp + x_fword());
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_del_fword(int c)
 {
 	x_delete(x_fword(), true);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -595,7 +595,7 @@ x_bword(void)
 
 	if (cp == xbuf) {
 		x_e_putc(BEL);
-		return 0;
+		return (0);
 	}
 	while (x_arg--) {
 		while (cp != xbuf && is_mfs(cp[-1])) {
@@ -608,7 +608,7 @@ x_bword(void)
 		}
 	}
 	x_goto(cp);
-	return nc;
+	return (nc);
 }
 
 static int
@@ -619,7 +619,7 @@ x_fword(void)
 
 	if (cp == xep) {
 		x_e_putc(BEL);
-		return 0;
+		return (0);
 	}
 	while (x_arg--) {
 		while (cp != xep && is_mfs(*cp)) {
@@ -631,7 +631,7 @@ x_fword(void)
 			nc++;
 		}
 	}
-	return nc;
+	return (nc);
 }
 
 static void
@@ -666,17 +666,17 @@ x_size_str(char *cp)
 	int size = 0;
 	while (*cp)
 		size += x_size(*cp++);
-	return size;
+	return (size);
 }
 
 static int
 x_size(int c)
 {
 	if (c=='\t')
-		return 4;	/* Kludge, tabs are always four spaces. */
+		return (4);	/* Kludge, tabs are always four spaces. */
 	if (iscntrl(c))		/* control char */
-		return 2;
-	return 1;
+		return (2);
+	return (1);
 }
 
 static void
@@ -709,12 +709,12 @@ x_mv_back(int c)
 
 	if (col == 0) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	if (x_arg > col)
 		x_arg = col;
 	x_goto(xcp - x_arg);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -724,12 +724,12 @@ x_mv_forw(int c)
 
 	if (!nleft) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	if (x_arg > nleft)
 		x_arg = nleft;
 	x_goto(xcp + x_arg);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -744,11 +744,11 @@ x_search_char_forw(int c)
 		    ((cp = (cp == xep) ? NULL : strchr(cp + 1, c)) == NULL &&
 		    (cp = strchr(xbuf, c)) == NULL)) {
 			x_e_putc(BEL);
-			return KSTD;
+			return (KSTD);
 		}
 	}
 	x_goto(cp);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -763,13 +763,13 @@ x_search_char_back(int c)
 				p = xep;
 			if (c < 0 || p == cp) {
 				x_e_putc(BEL);
-				return KSTD;
+				return (KSTD);
 			}
 			if (*p == c)
 				break;
 		}
 	x_goto(cp);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -779,7 +779,7 @@ x_newline(int c)
 	x_e_putc('\n');
 	x_flush();
 	*xep++ = '\n';
-	return KEOL;
+	return (KEOL);
 }
 
 static int
@@ -789,16 +789,16 @@ x_end_of_text(int c)
 	x_putc('\r');
 	x_putc('\n');
 	x_flush();
-	return KEOL;
+	return (KEOL);
 }
 
-static int x_beg_hist(int c) { x_load_hist(history); return KSTD;}
+static int x_beg_hist(int c) { x_load_hist(history); return (KSTD);}
 
-static int x_end_hist(int c) { x_load_hist(histptr); return KSTD;}
+static int x_end_hist(int c) { x_load_hist(histptr); return (KSTD);}
 
-static int x_prev_com(int c) { x_load_hist(x_histp - x_arg); return KSTD;}
+static int x_prev_com(int c) { x_load_hist(x_histp - x_arg); return (KSTD);}
 
-static int x_next_com(int c) { x_load_hist(x_histp + x_arg); return KSTD;}
+static int x_next_com(int c) { x_load_hist(x_histp + x_arg); return (KSTD);}
 
 /* Goto a particular history number obtained from argument.
  * If no argument is given history 1 is probably not what you
@@ -811,7 +811,7 @@ x_goto_hist(int c)
 		x_load_hist(history);
 	else
 		x_load_hist(histptr + x_arg - source->line);
-	return KSTD;
+	return (KSTD);
 }
 
 static void
@@ -882,7 +882,7 @@ x_search_hist(int c)
 		}
 		x_flush();
 		if ((c = x_e_getc()) < 0)
-			return KSTD;
+			return (KSTD);
 		f = kb_find_hist_func(c);
 		if (c == CTRL('['))
 			break;
@@ -925,7 +925,7 @@ x_search_hist(int c)
 	}
 	if (offset < 0)
 		x_redraw(-1);
-	return KSTD;
+	return (KSTD);
 }
 
 /* search backward from current line */
@@ -942,12 +942,12 @@ x_search(char *pat, int sameline, int offset)
 				x_e_putc('\n');
 			x_load_hist(hp);
 			x_goto(xbuf + i + strlen(pat) - (*pat == '^'));
-			return i;
+			return (i);
 		}
 	}
 	x_e_putc(BEL);
 	x_histp = histptr;
-	return -1;
+	return (-1);
 }
 
 /* return position of first match of pattern in string, else -1 */
@@ -955,10 +955,10 @@ static int
 x_match(char *str, char *pat)
 {
 	if (*pat == '^') {
-		return (strncmp(str, pat+1, strlen(pat+1)) == 0) ? 0 : -1;
+		return ((strncmp(str, pat+1, strlen(pat+1)) == 0) ? 0 : -1);
 	} else {
 		char *q = strstr(str, pat);
-		return (q == NULL) ? -1 : q - str;
+		return ((q == NULL) ? -1 : q - str);
 	}
 }
 
@@ -977,28 +977,28 @@ x_del_line(int c)
 	*xcp = 0;
 	xmp = NULL;
 	x_redraw(j);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_mv_end(int c)
 {
 	x_goto(xep);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_mv_begin(int c)
 {
 	x_goto(xbuf);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_draw_line(int c)
 {
 	x_redraw(-1);
-	return KSTD;
+	return (KSTD);
 
 }
 
@@ -1085,11 +1085,11 @@ x_transpose(int c)
 	 */
 	if (xcp == xbuf) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	} else if (xcp == xep || Flag(FGMACS)) {
 		if (xcp - xbuf == 1) {
 			x_e_putc(BEL);
-			return KSTD;
+			return (KSTD);
 		}
 		/* Gosling/Unipress emacs style: Swap two characters before the
 		 * cursor, do not change cursor position
@@ -1114,14 +1114,14 @@ x_transpose(int c)
 		x_bs(xcp[0]);
 		x_goto(xcp + 1);
 	}
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_literal(int c)
 {
 	x_literal_set = 1;
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1141,7 +1141,7 @@ x_kill(int c)
 		ndel = -ndel;
 	}
 	x_delete(ndel, true);
-	return KSTD;
+	return (KSTD);
 }
 
 static void
@@ -1165,11 +1165,11 @@ x_yank(int c)
 	if (killstack[killtp] == 0) {
 		x_e_puts("\nnothing to yank");
 		x_redraw(-1);
-		return KSTD;
+		return (KSTD);
 	}
 	xmp = xcp;
 	x_ins(killstack[killtp]);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1181,7 +1181,7 @@ x_meta_yank(int c)
 		killtp = killsp;
 		x_e_puts("\nyank something first");
 		x_redraw(-1);
-		return KSTD;
+		return (KSTD);
 	}
 	len = strlen(killstack[killtp]);
 	x_goto(xcp - len);
@@ -1193,7 +1193,7 @@ x_meta_yank(int c)
 			killtp--;
 	} while (killstack[killtp] == 0);
 	x_ins(killstack[killtp]);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1210,7 +1210,7 @@ static int
 x_error(int c)
 {
 	x_e_putc(BEL);
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1225,7 +1225,7 @@ x_stuffreset(int c)
 	xlp_valid = true;
 	*xcp = 0;
 	x_redraw(-1);
-	return KSTD;
+	return (KSTD);
 #endif
 }
 
@@ -1240,7 +1240,7 @@ x_stuff(int c)
 	(void)x_mode(savmode);
 	x_redraw(-1);
 #endif
-	return KSTD;
+	return (KSTD);
 }
 
 static char *
@@ -1616,7 +1616,7 @@ static int
 x_set_mark(int c)
 {
 	xmp = xcp;
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1627,7 +1627,7 @@ x_kill_region(int c)
 
 	if (xmp == NULL) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	if (xmp > xcp) {
 		rsize = xmp - xcp;
@@ -1639,7 +1639,7 @@ x_kill_region(int c)
 	x_goto(xr);
 	x_delete(rsize, true);
 	xmp = xr;
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1649,12 +1649,12 @@ x_xchg_point_mark(int c)
 
 	if (xmp == NULL) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	tmp = xmp;
 	xmp = xcp;
 	x_goto( tmp );
-	return KSTD;
+	return (KSTD);
 }
 
 static int
@@ -1678,18 +1678,18 @@ x_version(int c)
 	x_redraw(strlen(ksh_version));
 
 	if (c < 0)
-		return KSTD;
+		return (KSTD);
 	/* This is what at&t ksh seems to do...  Very bizarre */
 	if (c != ' ')
 		x_e_ungetc(c);
 
-	return KSTD;
+	return (KSTD);
 }
 
 static int
 x_noop(int c)
 {
-	return KSTD;
+	return (KSTD);
 }
 
 /*
@@ -1700,43 +1700,43 @@ static int
 x_comp_comm(int c)
 {
 	do_complete(XCF_COMMAND, CT_COMPLETE);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_list_comm(int c)
 {
 	do_complete(XCF_COMMAND, CT_LIST);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_complete(int c)
 {
 	do_complete(XCF_COMMAND_FILE, CT_COMPLETE);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_enumerate(int c)
 {
 	do_complete(XCF_COMMAND_FILE, CT_LIST);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_comp_file(int c)
 {
 	do_complete(XCF_FILE, CT_COMPLETE);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_list_file(int c)
 {
 	do_complete(XCF_FILE, CT_LIST);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_comp_list(int c)
 {
 	do_complete(XCF_COMMAND_FILE, CT_COMPLIST);
-	return KSTD;
+	return (KSTD);
 }
 static int
 x_expand(int c)
@@ -1752,7 +1752,7 @@ x_expand(int c)
 
 	if (nwords == 0) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 
 	x_goto(xbuf + start);
@@ -1761,12 +1761,12 @@ x_expand(int c)
 		if (x_escape(words[i], strlen(words[i]), x_emacs_putbuf) < 0 ||
 		    (++i < nwords && x_ins(space) < 0)) {
 			x_e_putc(BEL);
-			return KSTD;
+			return (KSTD);
 		}
 	}
 	x_adjust();
 
-	return KSTD;
+	return (KSTD);
 }
 
 /* type == 0 for list, 1 for complete and 2 for complete-list */
@@ -1875,7 +1875,7 @@ x_e_getc(void)
 	} else
 		c = x_getc();
 
-	return c;
+	return (c);
 }
 
 static void
@@ -1917,7 +1917,7 @@ x_debug_info(int c)
 	shellf("\txlp == 0x%lx\n", (long) x_lastcp());
 	shellf(newline);
 	x_redraw(-1);
-	return 0;
+	return (0);
 }
 #endif
 
@@ -1958,7 +1958,7 @@ x_set_arg(int c)
 		x_arg_defaulted = 0;
 		x_arg_set = 1;
 	}
-	return KSTD;
+	return (KSTD);
 }
 
 
@@ -1980,7 +1980,7 @@ x_comment(int c)
 		if (ret > 0)
 			return x_newline('\n');
 	}
-	return KSTD;
+	return (KSTD);
 }
 
 
@@ -2043,28 +2043,28 @@ x_prev_histword(int c)
 		x_ins(cp);
 		*rcp = c;
 	}
-	return KSTD;
+	return (KSTD);
 }
 
 /* Uppercase N(1) words */
 static int
 x_fold_upper(int c)
 {
-	return x_fold_case('U');
+	return (x_fold_case('U'));
 }
 
 /* Lowercase N(1) words */
 static int
 x_fold_lower(int c)
 {
-	return x_fold_case('L');
+	return (x_fold_case('L'));
 }
 
 /* Lowercase N(1) words */
 static int
 x_fold_capitalize(int c)
 {
-	return x_fold_case('C');
+	return (x_fold_case('C'));
 }
 
 /* NAME:
@@ -2085,7 +2085,7 @@ x_fold_case(int c)
 
 	if (cp == xep) {
 		x_e_putc(BEL);
-		return KSTD;
+		return (KSTD);
 	}
 	while (x_arg--) {
 		/*
@@ -2122,7 +2122,7 @@ x_fold_case(int c)
 		}
 	}
 	x_goto(cp);
-	return KSTD;
+	return (KSTD);
 }
 
 /* NAME:

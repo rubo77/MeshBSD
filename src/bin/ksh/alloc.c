@@ -71,18 +71,23 @@ alloc(size_t size, Area *ap)
 		ap->freelist->prev = l;
 	ap->freelist = l;
 
-	return L2P(l);
+	return (L2P(l));
 }
 
 void *
 aresize(void *ptr, size_t size, Area *ap)
 {
 	struct link *l, *l2, *lprev, *lnext;
+	char *l0;
 
 	if (ptr == NULL)
 		return alloc(size, ap);
-
-	l = P2L(ptr);
+/*
+ * XXX: ugly, I'll refactor this.
+ */
+	l0 = ptr;
+	l = (void *)(l0 - sizeof(struct link));
+	
 	lprev = l->prev;
 	lnext = l->next;
 
@@ -96,18 +101,20 @@ aresize(void *ptr, size_t size, Area *ap)
 	if (lnext)
 		lnext->prev = l2;
 
-	return L2P(l2);
+	return (L2P(l2));
 }
 
 void
 afree(void *ptr, Area *ap)
 {
 	struct link *l, *l2;
+	char *l0;
 
 	if (!ptr)
 		return;
 
-	l = P2L(ptr);
+	l0 = ptr;
+	l = (void *)(l0 - sizeof(struct link));
 
 	for (l2 = ap->freelist; l2 != NULL; l2 = l2->next) {
 		if (l == l2)

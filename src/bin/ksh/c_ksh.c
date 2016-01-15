@@ -1,3 +1,29 @@
+/*
+ * Copyright (c) 2016 Henning Matyschok
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /*	$OpenBSD: c_ksh.c,v 1.34 2013/12/17 16:37:05 deraadt Exp $	*/
 
 /*
@@ -8,6 +34,13 @@
 #include <sys/stat.h>
 #include <ctype.h>
 
+/*
+ * Due to case during runtime of c_alias 
+ * where "hash -r" releases set aliases.
+ */
+ 
+extern char *c_unalias_cmd;  
+extern char *c_unalias_options; 
 
 int
 c_cd(char **wp)
@@ -34,13 +67,13 @@ c_cd(char **wp)
 			physical = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 
 	if (Flag(FRESTRICTED)) {
 		bi_errorf("restricted shell - can't cd");
-		return 1;
+		return (1);
 	}
 
 	pwd_s = global("PWD");
@@ -50,7 +83,7 @@ c_cd(char **wp)
 		/* No arguments - go home */
 		if ((dir = str_val(global("HOME"))) == null) {
 			bi_errorf("no home directory (HOME not set)");
-			return 1;
+			return (1);
 		}
 	} else if (!wp[1]) {
 		/* One argument: - or dir */
@@ -59,7 +92,7 @@ c_cd(char **wp)
 			dir = str_val(oldpwd_s);
 			if (dir == null) {
 				bi_errorf("no OLDPWD");
-				return 1;
+				return (1);
 			}
 			printpath++;
 		}
@@ -70,7 +103,7 @@ c_cd(char **wp)
 
 		if (!current_wd[0]) {
 			bi_errorf("don't know current directory");
-			return 1;
+			return (1);
 		}
 		/* substitute arg1 for arg2 in current path.
 		 * if the first substitution fails because the cd fails
@@ -79,7 +112,7 @@ c_cd(char **wp)
 		 */
 		if ((cp = strstr(current_wd, wp[0])) == (char *) 0) {
 			bi_errorf("bad substitution");
-			return 1;
+			return (1);
 		}
 		ilen = cp - current_wd;
 		olen = strlen(wp[0]);
@@ -92,7 +125,7 @@ c_cd(char **wp)
 		printpath++;
 	} else {
 		bi_errorf("too many arguments");
-		return 1;
+		return (1);
 	}
 
 	Xinit(xs, xp, PATH, ATEMP);
@@ -119,7 +152,7 @@ c_cd(char **wp)
 			bi_errorf("%s - %s", try, strerror(errno));
 		if (fdir)
 			afree(fdir, ATEMP);
-		return 1;
+		return (1);
 	}
 
 	/* Clear out tracked aliases with relative paths */
@@ -155,7 +188,7 @@ c_cd(char **wp)
 	if (fdir)
 		afree(fdir, ATEMP);
 
-	return 0;
+	return (0);
 }
 
 int
@@ -174,13 +207,13 @@ c_pwd(char **wp)
 			physical = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 
 	if (wp[0]) {
 		bi_errorf("too many arguments");
-		return 1;
+		return (1);
 	}
 	p = current_wd[0] ? (physical ? get_phys_path(current_wd) : current_wd) :
 	    (char *) 0;
@@ -191,13 +224,13 @@ c_pwd(char **wp)
 		if (!p) {
 			bi_errorf("can't get current directory - %s",
 			    strerror(errno));
-			return 1;
+			return (1);
 		}
 	}
 	shprintf("%s\n", p);
 	if (freep)
 		afree(freep, ATEMP);
-	return 0;
+	return (0);
 }
 
 int
@@ -255,13 +288,13 @@ c_print(char **wp)
 		}
 	} else {
 		int optc;
-		const char *options = "Rnprsu,";
-		while ((optc = ksh_getopt(wp, &builtin_opt, options)) != -1)
+		const char *_options = "Rnprsu,";
+		while ((optc = ksh_getopt(wp, &builtin_opt, _options)) != -1)
 			switch (optc) {
 			case 'R': /* fake BSD echo command */
 				flags |= PO_PMINUSMINUS;
 				flags &= ~PO_EXPAND;
-				options = "ne";
+				_options = "ne";
 				break;
 			case 'e':
 				flags |= PO_EXPAND;
@@ -272,7 +305,7 @@ c_print(char **wp)
 			case 'p':
 				if ((fd = coproc_getfd(W_OK, &emsg)) < 0) {
 					bi_errorf("-p: %s", emsg);
-					return 1;
+					return (1);
 				}
 				break;
 			case 'r':
@@ -286,11 +319,11 @@ c_print(char **wp)
 					fd = 0;
 				else if ((fd = check_fd(s, W_OK, &emsg)) < 0) {
 					bi_errorf("-u: %s: %s", s, emsg);
-					return 1;
+					return (1);
 				}
 				break;
 			case '?':
-				return 1;
+				return (1);
 			}
 		if (!(builtin_opt.info & GI_MINUSMINUS)) {
 			/* treat a lone - like -- */
@@ -389,7 +422,7 @@ c_print(char **wp)
 				*if (errno == EPIPE)
 				*	coproc_write_close(fd);
 				 */
-				return 1;
+				return (1);
 			}
 			s += n;
 			len -= n;
@@ -398,7 +431,7 @@ c_print(char **wp)
 			restore_pipe(opipe);
 	}
 
-	return 0;
+	return (0);
 }
 
 int
@@ -411,9 +444,9 @@ c_whence(char **wp)
 	int optc;
 	int iam_whence = wp[0][0] == 'w';
 	int fcflags;
-	const char *options = iam_whence ? "pv" : "pvV";
+	const char *_options = iam_whence ? "pv" : "pvV";
 
-	while ((optc = ksh_getopt(wp, &builtin_opt, options)) != -1)
+	while ((optc = ksh_getopt(wp, &builtin_opt, _options)) != -1)
 		switch (optc) {
 		case 'p':
 			pflag = 1;
@@ -425,7 +458,7 @@ c_whence(char **wp)
 			Vflag = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 
@@ -517,7 +550,7 @@ c_whence(char **wp)
 		if (vflag || !ret)
 			shprintf(newline);
 	}
-	return ret;
+	return (ret);
 }
 
 /* Deal with command -vV - command -p dealt with in comexec() */
@@ -537,8 +570,8 @@ c_typeset(char **wp)
 	struct block *l = e->loc;
 	struct tbl *vp, **p;
 	Tflag fset = 0, fclr = 0;
-	int thing = 0, func = 0, local = 0;
-	const char *options = "L#R#UZ#fi#lprtux";	/* see comment below */
+	int thing = 0, func = 0, _local = 0;
+	const char *_options = "L#R#UZ#fi#lprtux";	/* see comment below */
 	char *fieldstr, *basestr;
 	int field, base;
 	int optc;
@@ -548,17 +581,17 @@ c_typeset(char **wp)
 	switch (**wp) {
 	case 'e':		/* export */
 		fset |= EXPORT;
-		options = "p";
+		_options = "p";
 		break;
 	case 'r':		/* readonly */
 		fset |= RDONLY;
-		options = "p";
+		_options = "p";
 		break;
 	case 's':		/* set */
 		/* called with 'typeset -' */
 		break;
 	case 't':		/* typeset */
-		local = 1;
+		_local = 1;
 		break;
 	}
 
@@ -572,7 +605,7 @@ c_typeset(char **wp)
 	 * Here, the number must follow the RLZi option, but is optional
 	 * (see the # kludge in ksh_getopt()).
 	 */
-	while ((optc = ksh_getopt(wp, &builtin_opt, options)) != -1) {
+	while ((optc = ksh_getopt(wp, &builtin_opt, _options)) != -1) {
 		flag = 0;
 		switch (optc) {
 		case 'L':
@@ -624,7 +657,7 @@ c_typeset(char **wp)
 			flag = EXPORT;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 		if (builtin_opt.info & GI_PLUS) {
 			fclr |= flag;
@@ -639,10 +672,10 @@ c_typeset(char **wp)
 
 	field = 0;
 	if (fieldstr && !bi_getn(fieldstr, &field))
-		return 1;
+		return (1);
 	base = 0;
 	if (basestr && !bi_getn(basestr, &base))
-		return 1;
+		return (1);
 
 	if (!(builtin_opt.info & GI_MINUSMINUS) && wp[builtin_opt.optind] &&
 	    (wp[builtin_opt.optind][0] == '-' ||
@@ -654,7 +687,7 @@ c_typeset(char **wp)
 
 	if (func && ((fset|fclr) & ~(TRACE|UCASEV_AL|EXPORT))) {
 		bi_errorf("only -t, -u and -x options may be used with -f");
-		return 1;
+		return (1);
 	}
 	if (wp[builtin_opt.optind]) {
 		/* Take care of exclusions.
@@ -684,7 +717,7 @@ c_typeset(char **wp)
 		int rval = 0;
 		struct tbl *f;
 
-		if (local && !func)
+		if (_local && !func)
 			fset |= LOCAL;
 		for (i = builtin_opt.optind; wp[i]; i++) {
 			if (func) {
@@ -705,10 +738,10 @@ c_typeset(char **wp)
 					    "%s() %T\n", wp[i], f->val.t);
 			} else if (!typeset(wp[i], fset, fclr, field, base)) {
 				bi_errorf("%s: not identifier", wp[i]);
-				return 1;
+				return (1);
 			}
 		}
-		return rval;
+		return (rval);
 	}
 
 	/* list variables and attributes */
@@ -827,7 +860,7 @@ c_typeset(char **wp)
 			}
 		}
 	}
-	return 0;
+	return (0);
 }
 
 int
@@ -866,7 +899,7 @@ c_alias(char **wp)
 			xflag = EXPORT;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	}
 	wp += builtin_opt.optind;
@@ -881,17 +914,19 @@ c_alias(char **wp)
 
 	/* "hash -r" means reset all the tracked aliases.. */
 	if (rflag) {
-		static const char *const args[] = {
-			"unalias", "-ta", (const char *) 0
+		char *c_unalias_argv[] = {
+			c_unalias_cmd,
+			c_unalias_options,
+			NULL,
 		};
 
 		if (!tflag || *wp) {
 			shprintf("alias: -r flag can only be used with -t"
 			    " and without arguments\n");
-			return 1;
+			return (1);
 		}
 		ksh_getopt_reset(&builtin_opt, GF_ERROR);
-		return c_unalias((char **) args);
+		return (c_unalias(c_unalias_argv));
 	}
 
 	if (*wp == NULL) {
@@ -963,7 +998,7 @@ c_alias(char **wp)
 			afree(alias, ATEMP);
 	}
 
-	return rv;
+	return (rv);
 }
 
 int
@@ -986,7 +1021,7 @@ c_unalias(char **wp)
 			t = &taliases;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 
@@ -1015,7 +1050,7 @@ c_unalias(char **wp)
 		}
 	}
 
-	return rv;
+	return (rv);
 }
 
 int
@@ -1033,7 +1068,7 @@ c_let(char **wp)
 				break;
 			} else
 				rv = val == 0;
-	return rv;
+	return (rv);
 }
 
 int
@@ -1059,7 +1094,7 @@ c_jobs(char **wp)
 			nflag = -1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 	if (!*wp) {
@@ -1070,7 +1105,7 @@ c_jobs(char **wp)
 			if (j_jobs(*wp, flag, nflag))
 				rv = 1;
 	}
-	return rv;
+	return (rv);
 }
 
 #ifdef JOBS
@@ -1082,20 +1117,20 @@ c_fgbg(char **wp)
 
 	if (!Flag(FMONITOR)) {
 		bi_errorf("job control not enabled");
-		return 1;
+		return (1);
 	}
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	wp += builtin_opt.optind;
 	if (*wp)
 		for (; *wp; wp++)
 			rv = j_resume(*wp, bg);
 	else
 		rv = j_resume("%%", bg);
-	/* POSIX says fg shall return 0 (unless an error occurs).
+	/* POSIX says fg shall return (0) (unless an error occurs).
 	 * at&t ksh returns the exit value of the job...
 	 */
-	return (bg || Flag(FPOSIX)) ? 0 : rv;
+	return ((bg || Flag(FPOSIX)) ? 0 : rv);
 }
 #endif
 
@@ -1122,7 +1157,7 @@ kill_fmt_entry(void *arg, int i, char *buf, int buflen)
 		    ki->num_width, i,
 		    ki->name_width, sigtraps[i].signal,
 		    sigtraps[i].mess);
-	return buf;
+	return (buf);
 }
 
 
@@ -1139,7 +1174,7 @@ c_kill(char **wp)
 	    (digit(p[1]) || isupper((unsigned char)p[1]))) {
 		if (!(t = gettrap(p + 1, true))) {
 			bi_errorf("bad signal `%s'", p + 1);
-			return 1;
+			return (1);
 		}
 		i = (wp[2] && strcmp(wp[2], "--") == 0) ? 3 : 2;
 	} else {
@@ -1154,11 +1189,11 @@ c_kill(char **wp)
 				if (!(t = gettrap(builtin_opt.optarg, true))) {
 					bi_errorf("bad signal `%s'",
 					    builtin_opt.optarg);
-					return 1;
+					return (1);
 				}
 				break;
 			case '?':
-				return 1;
+				return (1);
 			}
 		i = builtin_opt.optind;
 	}
@@ -1167,14 +1202,14 @@ c_kill(char **wp)
 		    "usage: kill [-s signame | -signum | -signame] { job | pid | pgrp } ...\n"
 		    "       kill -l [exit_status ...]\n");
 		bi_errorf(null);
-		return 1;
+		return (1);
 	}
 
 	if (lflag) {
 		if (wp[i]) {
 			for (; wp[i]; i++) {
 				if (!bi_getn(wp[i], &n))
-					return 1;
+					return (1);
 				if (n > 128 && n < 128 + NSIG)
 					n -= 128;
 				if (n > 0 && n < NSIG && sigtraps[n].name)
@@ -1189,19 +1224,22 @@ c_kill(char **wp)
 					shprintf("%s%s", p, sigtraps[i].name);
 			shprintf(newline);
 		} else {
-			int w, i;
+			int w, _i;
 			int mess_width;
 			struct kill_info ki;
 
-			for (i = NSIG, ki.num_width = 1; i >= 10; i /= 10)
+			for (_i = NSIG, ki.num_width = 1; _i >= 10; _i /= 10)
 				ki.num_width++;
 			ki.name_width = mess_width = 0;
-			for (i = 0; i < NSIG; i++) {
-				w = sigtraps[i].name ? strlen(sigtraps[i].name) :
+			for (_i = 0; _i < NSIG; _i++) {
+/*
+ * XXX: implicit promotion... ugly.
+ */ 			
+				w = sigtraps[_i].name ? (int)strlen(sigtraps[_i].name) :
 				    ki.num_width;
 				if (w > ki.name_width)
 					ki.name_width = w;
-				w = strlen(sigtraps[i].mess);
+				w = strlen(sigtraps[_i].mess);
 				if (w > mess_width)
 					mess_width = w;
 			}
@@ -1210,7 +1248,7 @@ c_kill(char **wp)
 			    kill_fmt_entry, (void *) &ki,
 			    ki.num_width + ki.name_width + mess_width + 3, 1);
 		}
-		return 0;
+		return (0);
 	}
 	rv = 0;
 	sig = t ? t->signal : SIGTERM;
@@ -1232,7 +1270,7 @@ c_kill(char **wp)
 			}
 		}
 	}
-	return rv;
+	return (rv);
 }
 
 void
@@ -1249,7 +1287,7 @@ int
 c_getopts(char **wp)
 {
 	int	argc;
-	const char *options;
+	const char *_options;
 	const char *var;
 	int	optc;
 	int	ret;
@@ -1257,28 +1295,28 @@ c_getopts(char **wp)
 	struct tbl *vq, *voptarg;
 
 	if (ksh_getopt(wp, &builtin_opt, null) == '?')
-		return 1;
+		return (1);
 	wp += builtin_opt.optind;
 
-	options = *wp++;
-	if (!options) {
+	_options = *wp++;
+	if (!_options) {
 		bi_errorf("missing options argument");
-		return 1;
+		return (1);
 	}
 
 	var = *wp++;
 	if (!var) {
 		bi_errorf("missing name argument");
-		return 1;
+		return (1);
 	}
 	if (!*var || *skip_varname(var, true)) {
 		bi_errorf("%s: is not an identifier", var);
-		return 1;
+		return (1);
 	}
 
 	if (e->loc->next == (struct block *) 0) {
 		internal_errorf(0, "c_getopts: no argv");
-		return 1;
+		return (1);
 	}
 	/* Which arguments are we parsing... */
 	if (*wp == (char *) 0)
@@ -1293,11 +1331,11 @@ c_getopts(char **wp)
 	    (user_opt.p != 0 &&
 	    user_opt.p > strlen(wp[user_opt.optind - 1]))) {
 		bi_errorf("arguments changed since last call");
-		return 1;
+		return (1);
 	}
 
 	user_opt.optarg = (char *) 0;
-	optc = ksh_getopt(wp, &user_opt, options);
+	optc = ksh_getopt(wp, &user_opt, _options);
 
 	if (optc >= 0 && optc != '?' && (user_opt.info & GI_PLUS)) {
 		buf[0] = '+';
@@ -1339,7 +1377,7 @@ c_getopts(char **wp)
 	if (Flag(FEXPORT))
 		typeset(var, EXPORT, 0, 0, 0);
 
-	return optc < 0 ? 1 : ret;
+	return (optc < 0 ? 1 : ret);
 }
 
 #ifdef EMACS
@@ -1358,7 +1396,7 @@ c_bind(char **wp)
 			macro = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		}
 	wp += builtin_opt.optind;
 
@@ -1373,7 +1411,7 @@ c_bind(char **wp)
 			rv = 1;
 	}
 
-	return rv;
+	return (rv);
 }
 #endif
 

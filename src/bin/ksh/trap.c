@@ -86,7 +86,7 @@ gettrap(const char *name, int igncase)
 
 		if (getn(name, &n) && 0 <= n && n < NSIG)
 			return &sigtraps[n];
-		return NULL;
+		return (NULL);
 	}
 	for (p = sigtraps, i = NSIG+1; --i >= 0; p++)
 		if (p->name) {
@@ -95,15 +95,15 @@ gettrap(const char *name, int igncase)
 				    (strlen(name) > 3 && !strncasecmp("SIG",
 				    p->name, 3) &&
 				    !strcasecmp(p->name, name + 3))))
-					return p;
+					return (p);
 			} else {
 				if (p->name && (!strcmp(p->name, name) ||
 				    (strlen(name) > 3 && !strncmp("SIG",
 				    p->name, 3) && !strcmp(p->name, name + 3))))
-					return p;
+					return (p);
 			}
 		}
-	return NULL;
+	return (NULL);
 }
 
 /*
@@ -150,8 +150,8 @@ fatal_trap_check(void)
 	for (p = sigtraps, i = NSIG+1; --i >= 0; p++)
 		if (p->set && (p->flags & (TF_DFL_INTR|TF_FATAL)))
 			/* return value is used as an exit code */
-			return 128 + p->signal;
-	return 0;
+			return (128 + p->signal);
+	return (0);
 }
 
 /* Returns the signal number of any pending traps: ie, a signal which has
@@ -167,8 +167,8 @@ trap_pending(void)
 	for (p = sigtraps, i = NSIG+1; --i >= 0; p++)
 		if (p->set && ((p->trap && p->trap[0]) ||
 		    ((p->flags & (TF_DFL_INTR|TF_FATAL)) && !p->trap)))
-			return p->signal;
-	return 0;
+			return (p->signal);
+	return (0);
 }
 
 /*
@@ -328,7 +328,7 @@ block_pipe(void)
 		setsig(p, SIG_IGN, SS_RESTORE_CURR);
 		restore_dfl = 1; /* restore to SIG_DFL */
 	}
-	return restore_dfl;
+	return (restore_dfl);
 }
 
 /* Called by c_print() to undo whatever block_pipe() did */
@@ -349,7 +349,7 @@ setsig(Trap *p, sig_t f, int flags)
 	struct sigaction sigact;
 
 	if (p->signal == SIGEXIT_ || p->signal == SIGERR_)
-		return 1;
+		return (1);
 
 	/* First time setting this signal?  If so, get and note the current
 	 * setting.
@@ -367,7 +367,7 @@ setsig(Trap *p, sig_t f, int flags)
 	 */
 	if ((p->flags & TF_ORIG_IGN) && !(flags & SS_FORCE) &&
 	    (!(flags & SS_USER) || !Flag(FTALKING)))
-		return 0;
+		return (0);
 
 	setexecsig(p, flags & SS_RESTORE_MASK);
 
@@ -390,7 +390,7 @@ setsig(Trap *p, sig_t f, int flags)
 		sigaction(p->signal, &sigact, (struct sigaction *) 0);
 	}
 
-	return 1;
+	return (1);
 }
 
 /* control what signal is set to before an exec() */

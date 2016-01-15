@@ -85,7 +85,7 @@ make_argv(int argc, char *argv[])
 		nargv[i] = NULL;
 	}
 
-	return nargv;
+	return (nargv);
 }
 
 int
@@ -99,6 +99,11 @@ main(int argc, char *argv[])
 	char **wp;
 	struct env env;
 	pid_t ppid;
+/*
+ * Initialze argument vecors and 
+ * constants for builtin comands.
+ */
+	initargs(); 
 
 	/* make sure argv[] is sane */
 	if (!*argv) {
@@ -398,7 +403,7 @@ main(int argc, char *argv[])
 		Flag(FTRACKALL) = 1;	/* set after ENV */
 
 	shell(s, true);	/* doesn't return */
-	return 0;
+	return (0);
 }
 
 static void
@@ -426,7 +431,7 @@ include(const char *name, int argc, char **argv, int intr_ok)
 
 	shf = shf_open(name, O_RDONLY, 0, SHF_MAPHI|SHF_CLEXEC);
 	if (shf == NULL)
-		return -1;
+		return (-1);
 
 	if (argv) {
 		old_argv = e->loc->argv;
@@ -446,13 +451,13 @@ include(const char *name, int argc, char **argv, int intr_ok)
 		switch (i) {
 		case LRETURN:
 		case LERROR:
-			return exstat & 0xff; /* see below */
+			return (exstat) & 0xff; /* see below */
 		case LINTR:
 			/* intr_ok is set if we are including .profile or $ENV.
 			 * If user ^C's out, we don't want to kill the shell...
 			 */
 			if (intr_ok && (exstat - 128) != SIGTERM)
-				return 1;
+				return (1);
 			/* FALLTHROUGH */
 		case LEXIT:
 		case LLEAVE:
@@ -477,7 +482,7 @@ include(const char *name, int argc, char **argv, int intr_ok)
 		e->loc->argv = old_argv;
 		e->loc->argc = old_argc;
 	}
-	return i & 0xff;	/* & 0xff to ensure value not -1 */
+	return (i & 0xff);	/* & 0xff to ensure value not -1 */
 }
 
 /*
@@ -492,7 +497,7 @@ command(const char *comm, int line)
 	s = pushs(SSTRING, ATEMP);
 	s->start = s->str = comm;
 	s->line = line;
-	return shell(s, false);
+	return (shell(s, false));
 }
 
 /*
@@ -601,7 +606,7 @@ shell(Source *volatile s, volatile int toplevel)
 	}
 	quitenv(NULL);
 	source = old_source;
-	return exstat;
+	return (exstat);
 }
 
 /* return to closest error handler or shell(), exit if none found */

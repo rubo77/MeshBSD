@@ -52,29 +52,29 @@ domknod(int argc, char **argv, mode_t mode)
 		mode |= S_IFBLK;
 	else {
 		bi_errorf("node must be type 'b' or 'c'.");
-		return 1;
+		return (1);
 	}
 
 	major = (long)strtoul(argv[2], &endp, 0);
 	if (endp == argv[2] || *endp != '\0') {
 		bi_errorf("non-numeric major number.");
-		return 1;
+		return (1);
 	}
 	minor = (long)strtoul(argv[3], &endp, 0);
 	if (endp == argv[3] || *endp != '\0') {
 		bi_errorf("non-numeric minor number.");
-		return 1;
+		return (1);
 	}
 	dev = makedev(major, minor);
 	if (major(dev) != major || minor(dev) != minor) {
 		bi_errorf("major or minor number too large");
-		return 1;
+		return (1);
 	}
 	if (mknod(argv[0], mode, dev) < 0) {
 		bi_errorf("%s: %s", argv[0], strerror(errno));
-		return 1;
+		return (1);
 	}
-	return 0;
+	return (0);
 }
 
 int
@@ -86,6 +86,6 @@ domkfifo(int argc, char **argv, mode_t mode)
 		bi_errorf("%s: %s", argv[0], strerror(errno));
 		rv = 1;
 	}
-	return(rv);
+	return (rv);
 }
 

@@ -6,6 +6,9 @@
  * $From: proto.h,v 1.3 1994/05/19 18:32:40 michael Exp michael $
  */
 
+/* args.c */
+void 	initargs(void);
+
 /* alloc.c */
 Area *	ainit(Area *);
 void	afreeall(Area *);

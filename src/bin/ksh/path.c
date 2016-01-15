@@ -97,7 +97,7 @@ make_path(const char *cwd, const char *file,
 	if (!use_cdpath)
 		*cdpathp = (char *) 0;
 
-	return rval;
+	return (rval);
 }
 
 /*
@@ -200,13 +200,13 @@ get_phys_path(const char *path)
 	xp = do_phys_path(&xs, xp, path);
 
 	if (!xp)
-		return (char *) 0;
+		return ((char *) 0);
 
 	if (Xlength(xs, xp) == 0)
 		Xput(xs, xp, '/');
 	Xput(xs, xp, '\0');
 
-	return Xclose(xs, xp);
+	return (Xclose(xs, xp));
 }
 
 static char *
@@ -246,7 +246,7 @@ do_phys_path(XString *xsp, char *xp, const char *path)
 		if (llen < 0) {
 			/* EINVAL means it wasn't a symlink... */
 			if (errno != EINVAL)
-				return (char *) 0;
+				return ((char *) 0);
 			continue;
 		}
 		lbuf[llen] = '\0';
@@ -255,9 +255,9 @@ do_phys_path(XString *xsp, char *xp, const char *path)
 		xp = lbuf[0] == '/' ? Xstring(*xsp, xp) :
 		    Xrestpos(*xsp, xp, savepos);
 		if (!(xp = do_phys_path(xsp, xp, lbuf)))
-			return (char *) 0;
+			return ((char *) 0);
 	}
-	return xp;
+	return (xp);
 }
 
 #ifdef	TEST
@@ -272,7 +272,7 @@ main(void)
 	printf("enter PWD: "); gets(pwd);
 	while (1) {
 		if (printf("Enter file: "), gets(file) == 0)
-			return 0;
+			return (0);
 		cp = cdpath;
 		do {
 			rv = make_path(pwd, file, &cp, result, sizeof(result));

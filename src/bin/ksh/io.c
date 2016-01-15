@@ -199,8 +199,8 @@ can_seek(int fd)
 {
 	struct stat statb;
 
-	return fstat(fd, &statb) == 0 && !S_ISREG(statb.st_mode) ?
-	    SHF_UNBUF : 0;
+	return (fstat(fd, &statb) == 0 && !S_ISREG(statb.st_mode) ?
+	    SHF_UNBUF : 0);
 }
 
 struct shf	shf_iob[3];
@@ -224,7 +224,7 @@ ksh_dup2(int ofd, int nfd, int errok)
 	if (ret < 0 && errno != EBADF && !errok)
 		errorf("too many files open in shell");
 
-	return ret;
+	return (ret);
 }
 
 /*
@@ -240,7 +240,7 @@ savefd(int fd)
 		nfd = fcntl(fd, F_DUPFD_CLOEXEC, FDBASE);
 		if (nfd < 0) {
 			if (errno == EBADF)
-				return -1;
+				return (-1);
 			else
 				errorf("too many files open in shell");
 		}
@@ -248,7 +248,7 @@ savefd(int fd)
 		nfd = fd;
 		fcntl(nfd, F_SETFD, FD_CLOEXEC);
 	}
-	return nfd;
+	return (nfd);
 }
 
 void
@@ -299,7 +299,7 @@ check_fd(char *name, int mode, const char **emsgp)
 		if ((fl = fcntl(fd = name[0] - '0', F_GETFL, 0)) < 0) {
 			if (emsgp)
 				*emsgp = "bad file descriptor";
-			return -1;
+			return (-1);
 		}
 		fl &= O_ACCMODE;
 		/* X_OK is a kludge to disable this check for dups (x<&1):
@@ -313,14 +313,14 @@ check_fd(char *name, int mode, const char **emsgp)
 				*emsgp = (fl == O_WRONLY) ?
 				    "fd not open for reading" :
 				    "fd not open for writing";
-			return -1;
+			return (-1);
 		}
-		return fd;
+		return (fd);
 	} else if (name[0] == 'p' && !name[1])
-		return coproc_getfd(mode, emsgp);
+		return (coproc_getfd(mode, emsgp));
 	if (emsgp)
 		*emsgp = "illegal file descriptor name";
-	return -1;
+	return (-1);
 }
 
 /* Called once from main */
@@ -376,10 +376,10 @@ coproc_getfd(int mode, const char **emsgp)
 	int fd = (mode & R_OK) ? coproc.read : coproc.write;
 
 	if (fd >= 0)
-		return fd;
+		return (fd);
 	if (emsgp)
 		*emsgp = "no coprocess";
-	return -1;
+	return (-1);
 }
 
 /* called to close file descriptors related to the coprocess (if any)
@@ -434,5 +434,5 @@ maketemp(Area *ap, Temp_type type, struct temp **tlist)
 
 	tp->next = *tlist;
 	*tlist = tp;
-	return tp;
+	return (tp);
 }

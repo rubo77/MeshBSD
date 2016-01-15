@@ -19,7 +19,7 @@ hash(const char *n)
 
 	while (*n != '\0')
 		h = 33*h + (unsigned char)(*n++);
-	return h;
+	return (h);
 }
 
 void
@@ -73,18 +73,18 @@ ktsearch(struct table *tp, const char *n, unsigned int h)
 	struct tbl **pp, *p;
 
 	if (tp->size == 0)
-		return NULL;
+		return (NULL);
 
 	/* search for name in hashed table */
 	for (pp = &tp->tbls[h & (tp->size-1)]; (p = *pp) != NULL; pp--) {
 		if (*p->name == *n && strcmp(p->name, n) == 0 &&
 		    (p->flag&DEFINED))
-			return p;
+			return (p);
 		if (pp == tp->tbls) /* wrap */
 			pp += tp->size;
 	}
 
-	return NULL;
+	return (NULL);
 }
 
 /* table */
@@ -102,7 +102,7 @@ ktenter(struct table *tp, const char *n, unsigned int h)
 	/* search for name in hashed table */
 	for (pp = &tp->tbls[h & (tp->size-1)]; (p = *pp) != NULL; pp--) {
 		if (*p->name == *n && strcmp(p->name, n) == 0)
-			return p;	/* found */
+			return (p);	/* found */
 		if (pp == tp->tbls) /* wrap */
 			pp += tp->size;
 	}
@@ -129,7 +129,7 @@ ktenter(struct table *tp, const char *n, unsigned int h)
 	/* enter in tp->tbls */
 	tp->nfree--;
 	*pp = p;
-	return p;
+	return (p);
 }
 
 void
@@ -151,9 +151,9 @@ ktnext(struct tstate *ts)
 	while (--ts->left >= 0) {
 		struct tbl *p = *ts->next++;
 		if (p != NULL && (p->flag&DEFINED))
-			return p;
+			return (p);
 	}
-	return NULL;
+	return (NULL);
 }
 
 static int
@@ -180,7 +180,7 @@ ktsort(struct table *tp)
 	i = dp - p;
 	qsortp((void**)p, (size_t)i, tnamecmp);
 	p[i] = NULL;
-	return p;
+	return (p);
 }
 
 #ifdef PERF_DEBUG /* performance debugging */
@@ -212,7 +212,7 @@ tprintinfo(struct table *tp)
 			ncmp++;
 			if (*p->name == *n && strcmp(p->name, n) == 0 &&
 			    (p->flag&DEFINED))
-				break; /* return p; */
+				break; /* return (p); */
 			if (pp == tp->tbls) /* wrap */
 				pp += tp->size;
 		}

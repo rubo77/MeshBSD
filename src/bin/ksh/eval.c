@@ -67,7 +67,7 @@ substitute(const char *cp, int f)
 		internal_errorf(1, "substitute");
 	source = sold;
 	afree(s, ATEMP);
-	return evalstr(yylval.cp, f);
+	return (evalstr(yylval.cp, f));
 }
 
 /*
@@ -79,13 +79,13 @@ eval(char **ap, int f)
 	XPtrV w;
 
 	if (*ap == NULL)
-		return ap;
+		return (ap);
 	XPinit(w, 32);
 	XPput(w, NULL);		/* space for shell name */
 	while (*ap != NULL)
 		expand(*ap++, &w, f);
 	XPput(w, NULL);
-	return (char **) XPclose(w) + 1;
+	return ((char **) XPclose(w) + 1);
 }
 
 /*
@@ -100,7 +100,7 @@ evalstr(char *cp, int f)
 	expand(cp, &w, f);
 	cp = (XPsize(w) == 0) ? null : (char*) *XPptrv(w);
 	XPfree(w);
-	return cp;
+	return (cp);
 }
 
 /*
@@ -126,7 +126,7 @@ evalonestr(char *cp, int f)
 		break;
 	}
 	XPfree(w);
-	return cp;
+	return (cp);
 }
 
 /* for nested substitution: ${var:=$var2} */
@@ -702,7 +702,7 @@ varsub(Expand *xp, char *sp, char *word,
 	struct tbl *vp;
 
 	if (sp[0] == '\0')	/* Bad variable name */
-		return -1;
+		return (-1);
 
 	xp->var = (struct tbl *) 0;
 
@@ -712,7 +712,7 @@ varsub(Expand *xp, char *sp, char *word,
 
 		/* Can't have any modifiers for ${#...} */
 		if (*word != CSUBST)
-			return -1;
+			return (-1);
 		sp++;
 		/* Check for size of array */
 		if ((p=strchr(sp,'[')) && (p[1]=='*'||p[1]=='@') && p[2]==']') {
@@ -736,7 +736,7 @@ varsub(Expand *xp, char *sp, char *word,
 			errorf("%s: parameter not set", sp);
 		*stypep = 0; /* unqualified variable/string substitution */
 		xp->str = str_save(ulton((unsigned long)c, 10), ATEMP);
-		return XSUB;
+		return (XSUB);
 	}
 
 	/* Check for qualifiers in word part */
@@ -758,9 +758,9 @@ varsub(Expand *xp, char *sp, char *word,
 			slen += 2;
 		}
 	} else if (stype)	/* : is not ok */
-		return -1;
+		return (-1);
 	if (!stype && *word != CSUBST)
-		return -1;
+		return (-1);
 	*stypep = stype;
 	*slenp = slen;
 
@@ -770,7 +770,7 @@ varsub(Expand *xp, char *sp, char *word,
 		case '=':	/* can't assign to a vector */
 		case '%':	/* can't trim a vector (yet) */
 		case '#':
-			return -1;
+			return (-1);
 		}
 		if (e->loc->argc == 0) {
 			xp->str = null;
@@ -791,7 +791,7 @@ varsub(Expand *xp, char *sp, char *word,
 			case '%':	/* can't trim a vector (yet) */
 			case '#':
 			case '?':
-				return -1;
+				return (-1);
 			}
 			XPinit(wv, 32);
 			vp = global(arrayname(sp));
@@ -815,7 +815,7 @@ varsub(Expand *xp, char *sp, char *word,
 			/* Can't assign things like $! or $1 */
 			if ((stype & 0x7f) == '=' &&
 			    (ctype(*sp, C_VAR1) || digit(*sp)))
-				return -1;
+				return (-1);
 			xp->var = global(sp);
 			xp->str = str_val(xp->var);
 			state = XSUB;
@@ -831,7 +831,7 @@ varsub(Expand *xp, char *sp, char *word,
 	if (Flag(FNOUNSET) && xp->str == null &&
 	    (ctype(c, C_SUBOP2) || (state != XBASE && c != '+')))
 		errorf("%s: parameter not set", sp);
-	return state;
+	return (state);
 }
 
 /*
@@ -852,7 +852,7 @@ comsub(Expand *xp, char *cp)
 	source = sold;
 
 	if (t == NULL)
-		return XBASE;
+		return (XBASE);
 
 	if (t != NULL && t->type == TCOM && /* $(<file) */
 	    *t->args == NULL && *t->vars == NULL && t->ioact != NULL) {
@@ -884,7 +884,7 @@ comsub(Expand *xp, char *cp)
 	}
 
 	xp->u.shf = shf;
-	return XCOM;
+	return (XCOM);
 }
 
 /*
@@ -903,7 +903,7 @@ trimsub(char *str, char *pat, int how)
 			c = *p; *p = '\0';
 			if (gmatch(str, pat, false)) {
 				*p = c;
-				return p;
+				return (p);
 			}
 			*p = c;
 		}
@@ -913,7 +913,7 @@ trimsub(char *str, char *pat, int how)
 			c = *p; *p = '\0';
 			if (gmatch(str, pat, false)) {
 				*p = c;
-				return p;
+				return (p);
 			}
 			*p = c;
 		}
@@ -921,18 +921,18 @@ trimsub(char *str, char *pat, int how)
 	case '%':		/* shortest match at end */
 		for (p = end; p >= str; p--) {
 			if (gmatch(p, pat, false))
-				return str_nsave(str, p - str, ATEMP);
+				return (str_nsave(str, p - str, ATEMP));
 		}
 		break;
 	case '%'|0x80:	/* longest match at end */
 		for (p = str; p <= end; p++) {
 			if (gmatch(p, pat, false))
-				return str_nsave(str, p - str, ATEMP);
+				return (str_nsave(str, p - str, ATEMP));
 		}
 		break;
 	}
 
-	return str;		/* no match, return string */
+	return (str);		/* no match, return (str)ing */
 }
 
 /*
@@ -972,7 +972,7 @@ glob_str(char *cp, XPtrV *wp, int markdirs)
 	globit(&xs, &xp, cp, wp, markdirs ? GF_MARKDIR : GF_NONE);
 	Xfree(xs, xp);
 
-	return XPsize(*wp) - oldsize;
+	return (XPsize(*wp) - oldsize);
 }
 
 static void
@@ -1150,7 +1150,7 @@ debunk(char *dp, const char *sp, size_t dlen)
 
 	if ((s = strchr(sp, MAGIC))) {
 		if (s - sp >= dlen)
-			return dp;
+			return (dp);
 		memcpy(dp, sp, s - sp);
 		for (d = dp + (s - sp); *s && (d - dp < dlen); s++)
 			if (!ISMAGIC(*s) || !(*++s & 0x80) ||
@@ -1166,7 +1166,7 @@ debunk(char *dp, const char *sp, size_t dlen)
 		*d = '\0';
 	} else if (dp != sp)
 		strlcpy(dp, sp, dlen);
-	return dp;
+	return (dp);
 }
 
 /* Check if p is an unquoted name, possibly followed by a / or :.  If so
@@ -1202,7 +1202,7 @@ maybe_expand_tilde(char *p, XString *dsp, char **dpp, int isassign)
 		*dpp = dp;
 		r = p;
 	}
-	return r;
+	return (r);
 }
 
 /*
@@ -1227,7 +1227,7 @@ tilde(char *cp)
 	/* If HOME, PWD or OLDPWD are not set, don't expand ~ */
 	if (dp == null)
 		dp = (char *) 0;
-	return dp;
+	return (dp);
 }
 
 /*
@@ -1248,11 +1248,11 @@ homedir(char *name)
 
 		pw = getpwnam(name);
 		if (pw == NULL)
-			return NULL;
+			return (NULL);
 		ap->val.s = str_save(pw->pw_dir, APERM);
 		ap->flag |= DEFINED|ISSET|ALLOC;
 	}
-	return ap->val.s;
+	return (ap->val.s);
 }
 
 #ifdef BRACE_EXPAND

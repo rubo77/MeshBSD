@@ -42,7 +42,7 @@ execute(struct op *volatile t,
 	struct tbl *tp = NULL;
 
 	if (t == NULL)
-		return 0;
+		return (0);
 
 	/* Caller doesn't care if XERROK should propagate. */
 	if (xerrok == NULL)
@@ -378,7 +378,7 @@ execute(struct op *volatile t,
 		if (Flag(FERREXIT))
 			unwind(LERROR);
 	}
-	return rv;
+	return (rv);
 }
 
 /*
@@ -681,7 +681,7 @@ comexec(struct op *t, struct tbl *volatile tp, char **ap, volatile int flags,
 		exstat = rv;
 		unwind(LLEAVE);
 	}
-	return rv;
+	return (rv);
 }
 
 static void
@@ -712,7 +712,7 @@ shcomexec(char **wp)
 	tp = ktsearch(&builtins, *wp, hash(*wp));
 	if (tp == NULL)
 		internal_errorf(1, "shcomexec: %s", *wp);
-	return call_builtin(tp, wp);
+	return (call_builtin(tp, wp));
 }
 
 /*
@@ -737,7 +737,7 @@ findfunc(const char *name, unsigned int h, int create)
 			break;
 		}
 	}
-	return tp;
+	return (tp);
 }
 
 /*
@@ -773,7 +773,7 @@ define(const char *name, struct op *t)
 
 	if (t == NULL) {		/* undefine */
 		ktdelete(tp);
-		return was_set ? 0 : 1;
+		return (was_set ? 0 : 1);
 	}
 
 	tp->val.t = tcopy(t->left, tp->areap);
@@ -781,7 +781,7 @@ define(const char *name, struct op *t)
 	if (t->u.ksh_func)
 		tp->flag |= FKSH;
 
-	return 0;
+	return (0);
 }
 
 /*
@@ -910,7 +910,7 @@ findcom(const char *name, int flags)
 			tp->u.fpath = npath;
 		}
 	}
-	return tp;
+	return (tp);
 }
 
 /*
@@ -941,7 +941,7 @@ search_access(const char *path, int mode,
 	struct stat statb;
 
 	if (stat(path, &statb) < 0)
-		return -1;
+		return (-1);
 	ret = access(path, mode);
 	if (ret < 0)
 		err = errno; /* File exists, but we can't access it */
@@ -953,7 +953,7 @@ search_access(const char *path, int mode,
 	}
 	if (err && errnop && !*errnop)
 		*errnop = err;
-	return ret;
+	return (ret);
 }
 
 /*
@@ -973,8 +973,8 @@ search(const char *name, const char *path,
 		*errnop = 0;
 	if (strchr(name, '/')) {
 		if (search_access(name, mode, errnop) == 0)
-			return (char *) name;
-		return NULL;
+			return ((char *) name);
+		return (NULL);
 	}
 
 	namelen = strlen(name) + 1;
@@ -995,12 +995,12 @@ search(const char *name, const char *path,
 		XcheckN(xs, xp, namelen);
 		memcpy(xp, name, namelen);
 		if (search_access(Xstring(xs, xp), mode, errnop) == 0)
-			return Xclose(xs, xp + namelen);
+			return (Xclose(xs, xp + namelen));
 		if (*sp++ == '\0')
 			sp = NULL;
 	}
 	Xfree(xs, xp);
-	return NULL;
+	return (NULL);
 }
 
 static int
@@ -1018,7 +1018,7 @@ call_builtin(struct tbl *tp, char **wp)
 	shl_stdout_ok = 0;
 	builtin_flag = 0;
 	builtin_argv0 = (char *) 0;
-	return rv;
+	return (rv);
 }
 
 /*
@@ -1090,10 +1090,10 @@ iosetup(struct ioword *iop, struct tbl *tp)
 		    &emsg)) < 0) {
 			warningf(true, "%s: %s",
 			    snptreef((char *) 0, 32, "%R", &iotmp), emsg);
-			return -1;
+			return (-1);
 		}
 		if (u == iop->unit)
-			return 0;		/* "dup from" == "dup to" */
+			return (0);		/* "dup from" == "dup to" */
 		break;
 	    }
 	}
@@ -1101,7 +1101,7 @@ iosetup(struct ioword *iop, struct tbl *tp)
 	if (do_open) {
 		if (Flag(FRESTRICTED) && (flags & O_CREAT)) {
 			warningf(true, "%s: restricted", cp);
-			return -1;
+			return (-1);
 		}
 		u = open(cp, flags, 0666);
 	}
@@ -1112,7 +1112,7 @@ iosetup(struct ioword *iop, struct tbl *tp)
 			    iotype == IODUP ? "dup" :
 			    (iotype == IOREAD || iotype == IOHERE) ?
 			    "open" : "create", cp, strerror(errno));
-		return -1;
+		return (-1);
 	}
 	/* Do not save if it has already been redirected (i.e. "cat >x >y"). */
 	if (e->savefd[iop->unit] == 0) {
@@ -1139,7 +1139,7 @@ iosetup(struct ioword *iop, struct tbl *tp)
 			    strerror(errno));
 			if (iotype != IODUP)
 				close(u);
-			return -1;
+			return (-1);
 		}
 		if (iotype != IODUP)
 			close(u);
@@ -1155,7 +1155,7 @@ iosetup(struct ioword *iop, struct tbl *tp)
 	}
 	if (u == 2) /* Clear any write errors */
 		shf_reopen(2, SHF_WR, shl_out);
-	return 0;
+	return (0);
 }
 
 /*
@@ -1174,7 +1174,7 @@ herein(const char *content, int sub)
 	/* ksh -c 'cat << EOF' can cause this... */
 	if (content == (char *) 0) {
 		warningf(true, "here document missing");
-		return -2; /* special to iosetup(): don't print error */
+		return (-2); /* special to iosetup(): don't print error */
 	}
 
 	/* Create temp file to hold content (done before newenv so temp
@@ -1187,7 +1187,7 @@ herein(const char *content, int sub)
 		    h->name, strerror(errno));
 		if (shf)
 			shf_close(shf);
-		return -2 /* special to iosetup(): don't print error */;
+		return (-2) /* special to iosetup(): don't print error */;
 	}
 
 	osource = source;
@@ -1197,7 +1197,7 @@ herein(const char *content, int sub)
 		source = osource;
 		quitenv(shf);
 		close(fd);
-		return -2; /* special to iosetup(): don't print error */
+		return (-2); /* special to iosetup(): don't print error */
 	}
 	if (sub) {
 		/* Do substitutions on the content of heredoc */
@@ -1217,10 +1217,10 @@ herein(const char *content, int sub)
 		close(fd);
 		warningf(true, "error writing %s: %s", h->name,
 		    strerror(errno));
-		return -2; /* special to iosetup(): don't print error */
+		return (-2); /* special to iosetup(): don't print error */
 	}
 
-	return fd;
+	return (fd);
 }
 
 #ifdef EDIT
@@ -1249,11 +1249,11 @@ do_selectargs(char **ap, bool print_menu)
 			pr_menu(ap);
 		shellf("%s", str_val(global("PS3")));
 		if (call_builtin(findcom("read", FC_BI), (char **) read_args))
-			return (char *) 0;
+			return ((char *) 0);
 		s = str_val(global("REPLY"));
 		if (*s) {
 			i = atoi(s);
-			return (i >= 1 && i <= argct) ? ap[i - 1] : null;
+			return ((i >= 1 && i <= argct) ? ap[i - 1] : null);
 		}
 		print_menu = 1;
 	}
@@ -1275,7 +1275,7 @@ select_fmt_entry(void *arg, int i, char *buf, int buflen)
 
 	shf_snprintf(buf, buflen, "%*d) %s",
 	    smi->num_width, i + 1, smi->args[i]);
-	return buf;
+	return (buf);
 }
 
 /*
@@ -1317,7 +1317,7 @@ pr_menu(char *const *ap)
 	print_columns(shl_out, n, select_fmt_entry, (void *) &smi,
 	    dwidth + nwidth + 2, 1);
 
-	return n;
+	return (n);
 }
 
 /* XXX: horrible kludge to fit within the framework */
@@ -1328,7 +1328,7 @@ static char *
 plain_fmt_entry(void *arg, int i, char *buf, int buflen)
 {
 	shf_snprintf(buf, buflen, "%s", ((char *const *)arg)[i]);
-	return buf;
+	return (buf);
 }
 
 int
@@ -1344,7 +1344,7 @@ pr_list(char *const *ap)
 	}
 	print_columns(shl_out, n, plain_fmt_entry, (void *) ap, nwidth + 1, 0);
 
-	return n;
+	return (n);
 }
 #endif /* EDIT */
 
@@ -1367,7 +1367,7 @@ dbteste_isa(Test_env *te, Test_meta meta)
 	char *p;
 
 	if (!*te->pos.wp)
-		return meta == TM_END;
+		return (meta == TM_END);
 
 	/* unquoted word? */
 	for (p = *te->pos.wp; *p == CHAR; p += 2)
@@ -1394,7 +1394,7 @@ dbteste_isa(Test_env *te, Test_meta meta)
 	if (ret)
 		te->pos.wp++;
 
-	return ret;
+	return (ret);
 }
 
 static const char *
@@ -1403,26 +1403,26 @@ dbteste_getopnd(Test_env *te, Test_op op, int do_eval)
 	char *s = *te->pos.wp;
 
 	if (!s)
-		return (char *) 0;
+		return ((char *) 0);
 
 	te->pos.wp++;
 
 	if (!do_eval)
-		return null;
+		return (null);
 
 	if (op == TO_STEQL || op == TO_STNEQ)
 		s = evalstr(s, DOTILDE | DOPAT);
 	else
 		s = evalstr(s, DOTILDE);
 
-	return s;
+	return (s);
 }
 
 static int
 dbteste_eval(Test_env *te, Test_op op, const char *opnd1, const char *opnd2,
     int do_eval)
 {
-	return test_eval(te, op, opnd1, opnd2, do_eval);
+	return (test_eval(te, op, opnd1, opnd2, do_eval));
 }
 
 static void

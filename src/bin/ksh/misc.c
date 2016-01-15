@@ -64,7 +64,7 @@ ulton(long unsigned int n, int base)
 		*--p = "0123456789ABCDEF"[n%base];
 		n /= base;
 	} while (n != 0);
-	return p;
+	return (p);
 }
 
 char *
@@ -74,7 +74,7 @@ str_save(const char *s, Area *ap)
 	char *p;
 
 	if (!s)
-		return NULL;
+		return (NULL);
 	len = strlen(s)+1;
 	p = alloc(len, ap);
 	strlcpy(p, s, len);
@@ -91,10 +91,10 @@ str_nsave(const char *s, int n, Area *ap)
 	char *ns;
 
 	if (n < 0)
-		return 0;
+		return (0);
 	ns = alloc(n + 1, ap);
 	ns[0] = '\0';
-	return strncat(ns, s, n);
+	return (strncat(ns, s, n));
 }
 
 /* called from expand.h:XcheckN() to grow buffer */
@@ -106,7 +106,7 @@ Xcheck_grow_(XString *xsp, char *xp, int more)
 	xsp->len += more > xsp->len ? more : xsp->len;
 	xsp->beg = aresize(xsp->beg, xsp->len + 8, xsp->areap);
 	xsp->end = xsp->beg + xsp->len;
-	return xsp->beg + (xp - old_beg);
+	return (xsp->beg + (xp - old_beg));
 }
 
 const struct option options[] = {
@@ -182,7 +182,7 @@ option(const char *n)
 		if (options[i].name && strcmp(options[i].name, n) == 0)
 			return i;
 
-	return -1;
+	return (-1);
 }
 
 struct options_info {
@@ -205,7 +205,7 @@ options_fmt_entry(void *arg, int i, char *buf, int buflen)
 	shf_snprintf(buf, buflen, "%-*s %s",
 	    oi->opt_width, oi->opts[i].name,
 	    Flag(oi->opts[i].flag) ? "on" : "off");
-	return buf;
+	return (buf);
 }
 
 static void
@@ -251,7 +251,7 @@ getoptions(void)
 		if (options[i].c && Flag(i))
 			*cp++ = options[i].c;
 	*cp = 0;
-	return str_save(m, ATEMP);
+	return (str_save(m, ATEMP));
 }
 
 /* change a Flag(*) value; takes care of special actions */
@@ -390,12 +390,12 @@ parse_args(char **argv,
 				change_flag((enum sh_flag) i, what, set);
 			else {
 				bi_errorf("%s: bad option", go.optarg);
-				return -1;
+				return (-1);
 			}
 			break;
 
 		case '?':
-			return -1;
+			return (-1);
 
 		default:
 			/* -s: sort positional params (at&t ksh stupidity) */
@@ -412,7 +412,7 @@ parse_args(char **argv,
 				}
 			if (i == NELEM(options)) {
 				internal_errorf(1, "parse_args: `%c'", optc);
-				return -1; /* not reached */
+				return (-1); /* not reached */
 			}
 		}
 	}
@@ -432,7 +432,7 @@ parse_args(char **argv,
 
 	if (arrayset && (!*array || *skip_varname(array, false))) {
 		bi_errorf("%s: is not an identifier", array);
-		return -1;
+		return (-1);
 	}
 	if (sortargs) {
 		for (i = go.optind; argv[i]; i++)
@@ -446,7 +446,7 @@ parse_args(char **argv,
 			;
 	}
 
-	return go.optind;
+	return (go.optind);
 }
 
 /* parse a decimal number: returns 0 if string isn't a number, 1 otherwise */
@@ -459,10 +459,10 @@ getn(const char *as, int *ai)
 	n = strtol(as, &p, 10);
 
 	if (!*as || *p || INT_MIN >= n || n >= INT_MAX)
-		return 0;
+		return (0);
 
 	*ai = (int)n;
-	return 1;
+	return (1);
 }
 
 /* getn() that prints error */
@@ -473,7 +473,7 @@ bi_getn(const char *as, int *ai)
 
 	if (!rv)
 		bi_errorf("%s: bad number", as);
-	return rv;
+	return (rv);
 }
 
 /* -------- gmatch.c -------- */
@@ -492,7 +492,7 @@ gmatch(const char *s, const char *p, int isfile)
 	const char *se, *pe;
 
 	if (s == NULL || p == NULL)
-		return 0;
+		return (0);
 	se = s + strlen(s);
 	pe = p + strlen(p);
 	/* isfile is false iff no syntax check has been done on
@@ -504,10 +504,10 @@ gmatch(const char *s, const char *p, int isfile)
 		char *t = len <= sizeof(tbuf) ? tbuf :
 		    (char *) alloc(len, ATEMP);
 		debunk(t, p, len);
-		return !strcmp(t, s);
+		return (!strcmp(t, s));
 	}
-	return do_gmatch((const unsigned char *) s, (const unsigned char *) se,
-	    (const unsigned char *) p, (const unsigned char *) pe);
+	return (do_gmatch((const unsigned char *) s, (const unsigned char *) se,
+	    (const unsigned char *) p, (const unsigned char *) pe));
 }
 
 /* Returns if p is a syntacticly correct globbing pattern, false
@@ -554,7 +554,7 @@ has_globbing(const char *xp, const char *xpe)
 		} else if (c == ']') {
 			if (in_bracket) {
 				if (bnest)		/* [a*(b]) */
-					return 0;
+					return (0);
 				in_bracket = 0;
 			}
 		} else if ((c & 0x80) && strchr("*+?@! ", c & 0x7f)) {
@@ -565,18 +565,18 @@ has_globbing(const char *xp, const char *xpe)
 				nest++;
 		} else if (c == '|') {
 			if (in_bracket && !bnest)	/* *(a[foo|bar]) */
-				return 0;
+				return (0);
 		} else if (c == /*(*/ ')') {
 			if (in_bracket) {
 				if (!bnest--)		/* *(a[b)c] */
-					return 0;
+					return (0);
 			} else if (nest)
 				nest--;
 		}
 		/* else must be a MAGIC-MAGIC, or MAGIC-!, MAGIC--, MAGIC-]
 			 MAGIC-{, MAGIC-,, MAGIC-} */
 	}
-	return saw_glob && !in_bracket && !nest;
+	return (saw_glob && !in_bracket && !nest);
 }
 
 /* Function must return either 0 or 1 (assumed by code for 0x80|'!') */
@@ -589,36 +589,36 @@ do_gmatch(const unsigned char *s, const unsigned char *se,
 	const unsigned char *srest;
 
 	if (s == NULL || p == NULL)
-		return 0;
+		return (0);
 	while (p < pe) {
 		pc = *p++;
 		sc = s < se ? *s : '\0';
 		s++;
 		if (!ISMAGIC(pc)) {
 			if (sc != pc)
-				return 0;
+				return (0);
 			continue;
 		}
 		switch (*p++) {
 		case '[':
 			if (sc == 0 || (p = cclass(p, sc)) == NULL)
-				return 0;
+				return (0);
 			break;
 
 		case '?':
 			if (sc == 0)
-				return 0;
+				return (0);
 			break;
 
 		case '*':
 			if (p == pe)
-				return 1;
+				return (1);
 			s--;
 			do {
 				if (do_gmatch(s, se, p, pe))
-					return 1;
+					return (1);
 			} while (s++ < se);
-			return 0;
+			return (0);
 
 		  /*
 		   * [*+?@!](pattern|pattern|..)
@@ -628,12 +628,12 @@ do_gmatch(const unsigned char *s, const unsigned char *se,
 		case 0x80|'+': /* matches one or more times */
 		case 0x80|'*': /* matches zero or more times */
 			if (!(prest = pat_scan(p, pe, 0)))
-				return 0;
+				return (0);
 			s--;
 			/* take care of zero matches */
 			if (p[-1] == (0x80 | '*') &&
 			    do_gmatch(s, se, prest, pe))
-				return 1;
+				return (1);
 			for (psub = p; ; psub = pnext) {
 				pnext = pat_scan(psub, pe, 1);
 				for (srest = s; srest <= se; srest++) {
@@ -641,39 +641,39 @@ do_gmatch(const unsigned char *s, const unsigned char *se,
 					    (do_gmatch(srest, se, prest, pe) ||
 					    (s != srest && do_gmatch(srest,
 					    se, p - 2, pe))))
-						return 1;
+						return (1);
 				}
 				if (pnext == prest)
 					break;
 			}
-			return 0;
+			return (0);
 
 		case 0x80|'?': /* matches zero or once */
 		case 0x80|'@': /* matches one of the patterns */
 		case 0x80|' ': /* simile for @ */
 			if (!(prest = pat_scan(p, pe, 0)))
-				return 0;
+				return (0);
 			s--;
 			/* Take care of zero matches */
 			if (p[-1] == (0x80 | '?') &&
 			    do_gmatch(s, se, prest, pe))
-				return 1;
+				return (1);
 			for (psub = p; ; psub = pnext) {
 				pnext = pat_scan(psub, pe, 1);
 				srest = prest == pe ? se : s;
 				for (; srest <= se; srest++) {
 					if (do_gmatch(s, srest, psub, pnext - 2) &&
 					    do_gmatch(srest, se, prest, pe))
-						return 1;
+						return (1);
 				}
 				if (pnext == prest)
 					break;
 			}
-			return 0;
+			return (0);
 
 		case 0x80|'!': /* matches none of the patterns */
 			if (!(prest = pat_scan(p, pe, 0)))
-				return 0;
+				return (0);
 			s--;
 			for (srest = s; srest <= se; srest++) {
 				int matched = 0;
@@ -690,17 +690,17 @@ do_gmatch(const unsigned char *s, const unsigned char *se,
 				}
 				if (!matched &&
 				    do_gmatch(srest, se, prest, pe))
-					return 1;
+					return (1);
 			}
-			return 0;
+			return (0);
 
 		default:
 			if (sc != p[-1])
-				return 0;
+				return (0);
 			break;
 		}
 	}
-	return s == se;
+	return (s == se);
 }
 
 static int
@@ -713,7 +713,7 @@ posix_cclass(const unsigned char *pattern, int test, const unsigned char **ep)
 
 	if ((colon = strchr(pattern, ':')) == NULL || colon[1] != MAGIC) {
 		*ep = pattern - 2;
-		return -1;
+		return (-1);
 	}
 	*ep = colon + 3; /* skip MAGIC */
 	len = (size_t)(colon - pattern);
@@ -728,7 +728,7 @@ posix_cclass(const unsigned char *pattern, int test, const unsigned char **ep)
 	if (cc->name == NULL) {
 		rval = -2;	/* invalid character class */
 	}
-	return rval;
+	return (rval);
 }
 
 static const unsigned char *
@@ -751,7 +751,7 @@ cclass(const unsigned char *p, int sub)
 					found = 1;
 					break;
 				case -2:
-					return NULL;
+					return (NULL);
 				}
 			} while (rv != -1 && p[0] == MAGIC && p[1] == '[' && p[2] == ':');
 			if (p[0] == MAGIC && p[1] == ']')
@@ -770,7 +770,7 @@ cclass(const unsigned char *p, int sub)
 		}
 		if (c == '\0')
 			/* No closing ] - act as if the opening [ was quoted */
-			return sub == '[' ? orig_p : NULL;
+			return (sub == '[' ? orig_p : NULL);
 		if (ISMAGIC(p[0]) && p[1] == '-' &&
 		    (!ISMAGIC(p[2]) || p[3] != ']')) {
 			p += 2; /* MAGIC- */
@@ -782,14 +782,14 @@ cclass(const unsigned char *p, int sub)
 			}
 			/* POSIX says this is an invalid expression */
 			if (c > d)
-				return NULL;
+				return (NULL);
 		} else
 			d = c;
 		if (c == sub || (c <= sub && sub <= d))
 			found = 1;
 	} while (!(ISMAGIC(p[0]) && p[1] == ']'));
 
-	return (found != not) ? p+2 : NULL;
+	return ((found != not) ? p+2 : NULL);
 }
 
 /* Look for next ) or | (if match_sep) in *(foo|bar) pattern */
@@ -803,11 +803,11 @@ pat_scan(const unsigned char *p, const unsigned char *pe, int match_sep)
 			continue;
 		if ((*++p == /*(*/ ')' && nest-- == 0) ||
 		    (*p == '|' && match_sep && nest == 0))
-			return ++p;
+			return (++p);
 		if ((*p & 0x80) && strchr("*+?@! ", *p & 0x7f))
 			nest++;
 	}
-	return (const unsigned char *) 0;
+	return ((const unsigned char *) 0);
 }
 
 /*
@@ -878,14 +878,14 @@ ksh_getopt(char **argv, Getopt *go, const char *options)
 			go->optind++;
 			go->p = 0;
 			go->info |= GI_MINUSMINUS;
-			return -1;
+			return (-1);
 		}
 		if (arg == (char *) 0 ||
 		    ((flag != '-' ) && /* neither a - nor a + (if + allowed) */
 		    (!(go->flags & GF_PLUSOPT) || flag != '+')) ||
 		    (c = arg[1]) == '\0') {
 			go->p = 0;
-			return -1;
+			return (-1);
 		}
 		go->optind++;
 		go->info &= ~(GI_MINUS|GI_PLUS);
@@ -904,7 +904,7 @@ ksh_getopt(char **argv, Getopt *go, const char *options)
 			if (go->flags & GF_ERROR)
 				bi_errorf(null);
 		}
-		return '?';
+		return ('?');
 	}
 	/* : means argument must be present, may be part of option argument
 	 *   or the next argument
@@ -922,14 +922,14 @@ ksh_getopt(char **argv, Getopt *go, const char *options)
 			if (options[0] == ':') {
 				go->buf[0] = c;
 				go->optarg = go->buf;
-				return ':';
+				return (':');
 			}
 			warningf(true, "%s%s-`%c' requires argument",
 			    (go->flags & GF_NONAME) ? "" : argv[0],
 			    (go->flags & GF_NONAME) ? "" : ": ", c);
 			if (go->flags & GF_ERROR)
 				bi_errorf(null);
-			return '?';
+			return ('?');
 		}
 		go->p = 0;
 	} else if (*o == ',') {
@@ -957,7 +957,7 @@ ksh_getopt(char **argv, Getopt *go, const char *options)
 				go->optarg = (char *) 0;
 		}
 	}
-	return c;
+	return (c);
 }
 
 /* print variable/alias value using necessary quotes
@@ -1071,9 +1071,9 @@ strip_nuls(char *buf, int nbytes)
 			dst += q - p;
 		}
 		*dst = '\0';
-		return dst - buf;
+		return (dst - buf);
 	}
-	return nbytes;
+	return (nbytes);
 }
 
 /* Like read(2), but if read fails due to non-blocking flag, resets flag
@@ -1096,7 +1096,7 @@ blocking_read(int fd, char *buf, int nbytes)
 		}
 		break;
 	}
-	return ret;
+	return (ret);
 }
 
 /* Reset the non-blocking flag on the specified file descriptor.
@@ -1109,13 +1109,13 @@ reset_nonblock(int fd)
 	int flags;
 
 	if ((flags = fcntl(fd, F_GETFL, 0)) < 0)
-		return -1;
+		return (-1);
 	if (!(flags & O_NONBLOCK))
-		return 0;
+		return (0);
 	flags &= ~O_NONBLOCK;
 	if (fcntl(fd, F_SETFL, flags) < 0)
-		return -1;
-	return 1;
+		return (-1);
+	return (1);
 }
 
 
@@ -1144,5 +1144,5 @@ ksh_get_wd(char *buf, int bsize)
 			afree(b, ATEMP);
 	}
 
-	return ret;
+	return (ret);
 }

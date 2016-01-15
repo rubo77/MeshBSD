@@ -50,7 +50,7 @@ x_init(void)
 
 /* ARGSUSED */
 static void
-x_sigwinch(int sig)
+x_sigwinch(int sig __unused)
 {
 	got_sigwinch = 1;
 }
@@ -106,7 +106,7 @@ x_read(char *buf, size_t len)
 		i = -1;		/* internal error */
 	x_mode(false);
 	check_sigwinch();
-	return i;
+	return (i);
 }
 
 /* tty I/O */
@@ -124,7 +124,7 @@ x_getc(void)
 			x_mode(true);
 		}
 	if (n != 1)
-		return -1;
+		return (-1);
 	return (int) (unsigned char) c;
 }
 
@@ -154,7 +154,7 @@ x_mode(bool onoff)
 	bool		prev;
 
 	if (x_cur_mode == onoff)
-		return x_cur_mode;
+		return (x_cur_mode);
 	prev = x_cur_mode;
 	x_cur_mode = onoff;
 
@@ -204,7 +204,7 @@ x_mode(bool onoff)
 		tcsetattr(tty_fd, TCSADRAIN, &tty_state);
 	}
 
-	return prev;
+	return (prev);
 }
 
 void
@@ -219,7 +219,7 @@ set_editmode(const char *ed)
 #endif
 	};
 	char *rcp;
-	int i;
+	size_t i;
 
 	if ((rcp = strrchr(ed, '/')))
 		ed = ++rcp;
@@ -235,7 +235,7 @@ set_editmode(const char *ed)
 
 /* Handle the commenting/uncommenting of a line.
  * Returns:
- *	1 if a carriage return is indicated (comment added)
+ *	1 if a carriage return (i)s indicated (comment added)
  *	0 if no return (comment removed)
  *	-1 if there is an error (not enough room for comment chars)
  * If successful, *lenp contains the new length.  Note: cursor should be
@@ -248,7 +248,7 @@ x_do_comment(char *buf, int bsize, int *lenp)
 	int len = *lenp;
 
 	if (len == 0)
-		return 1; /* somewhat arbitrary - it's what at&t ksh does */
+		return (1); /* somewhat arbitrary - it's what at&t ksh does */
 
 	/* Already commented? */
 	if (buf[0] == '#') {
@@ -260,7 +260,7 @@ x_do_comment(char *buf, int bsize, int *lenp)
 			saw_nl = buf[i] == '\n';
 		}
 		*lenp = j;
-		return 0;
+		return (0);
 	} else {
 		int n = 1;
 
@@ -269,7 +269,7 @@ x_do_comment(char *buf, int bsize, int *lenp)
 			if (buf[i] == '\n')
 				n++;
 		if (len + n >= bsize)
-			return -1;
+			return (-1);
 		/* Now add them... */
 		for (i = len, j = len + n; --i >= 0; ) {
 			if (buf[i] == '\n')
@@ -278,7 +278,7 @@ x_do_comment(char *buf, int bsize, int *lenp)
 		}
 		buf[0] = '#';
 		*lenp += n;
-		return 1;
+		return (1);
 	}
 }
 
@@ -344,7 +344,7 @@ x_print_expansions(int nwords, char *const *words, int is_command)
  *	- returns number of matching strings
  */
 static int
-x_file_glob(int flags, const char *str, int slen, char ***wordsp)
+x_file_glob(int flags __unused, const char *str, int slen, char ***wordsp)
 {
 	char *toglob;
 	char **words;
@@ -353,7 +353,7 @@ x_file_glob(int flags, const char *str, int slen, char ***wordsp)
 	struct source *s, *sold;
 
 	if (slen < 0)
-		return 0;
+		return (0);
 
 	toglob = add_glob(str, slen);
 
@@ -367,7 +367,7 @@ x_file_glob(int flags, const char *str, int slen, char ***wordsp)
 	if (yylex(ONEWORD|UNESCAPE) != LWORD) {
 		source = sold;
 		internal_errorf(0, "fileglob: substitute error");
-		return 0;
+		return (0);
 	}
 	source = sold;
 	XPinit(w, 32);
@@ -401,7 +401,7 @@ x_file_glob(int flags, const char *str, int slen, char ***wordsp)
 		*wordsp = NULL;
 	}
 
-	return nwords;
+	return (nwords);
 }
 
 /* Data structure used in x_command_glob() */
@@ -422,7 +422,7 @@ path_order_cmp(const void *aa, const void *bb)
 	int t;
 
 	t = strcmp(a->word + a->base, b->word + b->base);
-	return t ? t : a->path_order - b->path_order;
+	return (t ? t : a->path_order - b->path_order);
 }
 
 static int
@@ -436,7 +436,7 @@ x_command_glob(int flags, const char *str, int slen, char ***wordsp)
 	struct block *l;
 
 	if (slen < 0)
-		return 0;
+		return (0);
 
 	toglob = add_glob(str, slen);
 
@@ -461,7 +461,7 @@ x_command_glob(int flags, const char *str, int slen, char ***wordsp)
 	if (!nwords) {
 		*wordsp = (char **) 0;
 		XPfree(w);
-		return 0;
+		return (0);
 	}
 
 	/* Sort entries */
@@ -511,7 +511,7 @@ x_command_glob(int flags, const char *str, int slen, char ***wordsp)
 	XPput(w, NULL);
 	*wordsp = (char **) XPclose(w);
 
-	return nwords;
+	return (nwords);
 }
 
 #define IS_WORDC(c)	!( ctype(c, C_LEX1) || (c) == '\'' || (c) == '"' || \
@@ -528,7 +528,7 @@ x_locate_word(const char *buf, int buflen, int pos, int *startp,
 	if (pos < 0 || pos > buflen) {
 		*startp = pos;
 		*is_commandp = 0;
-		return 0;
+		return (0);
 	}
 	/* The case where pos == buflen happens to take care of itself... */
 
@@ -568,7 +568,7 @@ x_locate_word(const char *buf, int buflen, int pos, int *startp,
 
 	*startp = start;
 
-	return end - start;
+	return (end - start);
 }
 
 int
@@ -588,13 +588,13 @@ x_cf_glob(int flags, const char *buf, int buflen, int pos, int *startp,
 	 * useful, so allow these.
 	 */
 	if (len == 0 && is_command)
-		return 0;
+		return (0);
 
 	nwords = (is_command ? x_command_glob : x_file_glob)(flags,
 	    buf + *startp, len, &words);
 	if (nwords == 0) {
 		*wordsp = (char **) 0;
-		return 0;
+		return (0);
 	}
 
 	if (is_commandp)
@@ -602,7 +602,7 @@ x_cf_glob(int flags, const char *buf, int buflen, int pos, int *startp,
 	*wordsp = words;
 	*endp = *startp + len;
 
-	return nwords;
+	return (nwords);
 }
 
 /* Given a string, copy it and possibly add a '*' to the end.  The
@@ -616,7 +616,7 @@ add_glob(const char *str, int slen)
 	bool saw_slash = false;
 
 	if (slen < 0)
-		return (char *) 0;
+		return ((char *) 0);
 
 	toglob = str_nsave(str, slen + 1, ATEMP); /* + 1 for "*" */
 	toglob[slen] = '\0';
@@ -641,7 +641,7 @@ add_glob(const char *str, int slen)
 		toglob[slen + 1] = '\0';
 	}
 
-	return toglob;
+	return (toglob);
 }
 
 /*
@@ -655,7 +655,7 @@ x_longest_prefix(int nwords, char *const *words)
 	char *p;
 
 	if (nwords <= 0)
-		return 0;
+		return (0);
 
 	prefix_len = strlen(words[0]);
 	for (i = 1; i < nwords; i++)
@@ -664,7 +664,7 @@ x_longest_prefix(int nwords, char *const *words)
 				prefix_len = j;
 				break;
 			}
-	return prefix_len;
+	return (prefix_len);
 }
 
 void
@@ -698,7 +698,7 @@ x_basename(const char *s, const char *se)
 	if (se == (char *) 0)
 		se = s + strlen(s);
 	if (s == se)
-		return 0;
+		return (0);
 
 	/* Skip trailing slashes */
 	for (p = se - 1; p > s && *p == '/'; p--)
@@ -708,7 +708,7 @@ x_basename(const char *s, const char *se)
 	if (*p == '/' && p + 1 < se)
 		p++;
 
-	return p - s;
+	return (p - s);
 }
 
 /*
@@ -728,7 +728,7 @@ glob_table(const char *pat, XPtrV *wp, struct table *tp)
 }
 
 static void
-glob_path(int flags, const char *pat, XPtrV *wp, const char *path)
+glob_path(int flags, const char *pat, XPtrV *wp, const char *_path)
 {
 	const char *sp, *p;
 	char *xp;
@@ -740,7 +740,7 @@ glob_path(int flags, const char *pat, XPtrV *wp, const char *path)
 	XString xs;
 
 	patlen = strlen(pat) + 1;
-	sp = path;
+	sp = _path;
 	Xinit(xs, xp, patlen + 128, ATEMP);
 	while (sp) {
 		xp = Xstring(xs, xp);

@@ -170,7 +170,7 @@ mballoc(char *p, char *m)
 		mbp->mb_mtime = stbuf.st_mtime;
 	else
 		mbp->mb_mtime = 0;
-	return(mbp);
+	return (mbp);
 }
 
 static void

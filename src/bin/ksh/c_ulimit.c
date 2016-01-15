@@ -51,16 +51,16 @@ c_ulimit(char **wp)
 #ifdef RLIMIT_VMEM
 		{ "vmemory(kbytes)", RLIMIT_VMEM, 1024, 'v' },
 #endif /* RLIMIT_VMEM */
-		{ (char *) 0 }
+		{ NULL, 0, 0, 0 },
 	};
-	static char	options[4 + NELEM(limits) * 2];
+	static char	_options[4 + NELEM(limits) * 2];
 	int		how = SOFT | HARD;
 	const struct limits	*l;
 	int		optc, all = 0;
 
-	if (!options[0]) {
+	if (!_options[0]) {
 		/* build options string on first call - yuck */
-		char *p = options;
+		char *p = _options;
 
 		*p++ = 'H'; *p++ = 'S'; *p++ = 'a';
 		for (l = limits; l->name; l++) {
@@ -70,7 +70,7 @@ c_ulimit(char **wp)
 		*p = '\0';
 	}
 	/* First check for -a, -H and -S. */
-	while ((optc = ksh_getopt(wp, &builtin_opt, options)) != -1)
+	while ((optc = ksh_getopt(wp, &builtin_opt, _options)) != -1)
 		switch (optc) {
 		case 'H':
 			how = HARD;
@@ -82,36 +82,36 @@ c_ulimit(char **wp)
 			all = 1;
 			break;
 		case '?':
-			return 1;
+			return (1);
 		default:
 			break;
 		}
 
 	if (wp[builtin_opt.optind] != NULL) {
 		bi_errorf("usage: ulimit [-acdfHlmnpSst] [value]");
-		return 1;
+		return (1);
 	}
 
 	/* Then parse and act on the actual limits, one at a time */
 	ksh_getopt_reset(&builtin_opt, GF_ERROR);
-	while ((optc = ksh_getopt(wp, &builtin_opt, options)) != -1)
+	while ((optc = ksh_getopt(wp, &builtin_opt, _options)) != -1)
 		switch (optc) {
 		case 'a':
 		case 'H':
 		case 'S':
 			break;
 		case '?':
-			return 1;
+			return (1);
 		default:
 			for (l = limits; l->name && l->option != optc; l++)
 				;
 			if (!l->name) {
 				internal_errorf(0, "ulimit: %c", optc);
-				return 1;
+				return (1);
 			}
 			if (builtin_opt.optarg) {
 				if (set_ulimit(l, builtin_opt.optarg, how))
-					return 1;
+					return (1);
 			} else
 				print_ulimit(l, how);
 			break;
@@ -129,14 +129,14 @@ c_ulimit(char **wp)
 		l = &limits[1];
 		if (wp[0] != NULL) {
 			if (set_ulimit(l, wp[0], how))
-				return 1;
+				return (1);
 			wp++;
 		} else {
 			print_ulimit(l, how);
 		}
 	}
 
-	return 0;
+	return (0);
 }
 
 static int
@@ -151,7 +151,7 @@ set_ulimit(const struct limits *l, const char *v, int how)
 		long rval;
 
 		if (!evaluate(v, &rval, KSH_RETURN_ERROR, false))
-			return 1;
+			return (1);
 		/*
 		 * Avoid problems caused by typos that evaluate misses due
 		 * to evaluating unset parameters to 0...
@@ -160,7 +160,7 @@ set_ulimit(const struct limits *l, const char *v, int how)
 		 */
 		if (!rval && !digit(v[0])) {
 			bi_errorf("invalid limit: %s", v);
-			return 1;
+			return (1);
 		}
 		val = (rlim_t)rval * l->factor;
 	}
@@ -176,9 +176,9 @@ set_ulimit(const struct limits *l, const char *v, int how)
 		else
 			bi_errorf("bad -%c limit: %s", l->option,
 			    strerror(errno));
-		return 1;
+		return (1);
 	}
-	return 0;
+	return (0);
 }
 
 static void

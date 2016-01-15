@@ -39,3 +39,12 @@ options 	NETGRAPH_PPPOE
 
 device 		tun
 
+#
+# USB support for 3G datacards
+#
+device ucom
+device u3g
+
+
+
+

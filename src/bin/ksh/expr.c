@@ -155,7 +155,7 @@ evaluate(const char *expr, long int *rval, int error_ok, bool arith)
 	v.type = 0;
 	ret = v_evaluate(&v, expr, error_ok, arith);
 	*rval = v.val.i;
-	return ret;
+	return (ret);
 }
 
 /*
@@ -186,7 +186,7 @@ v_evaluate(struct tbl *vp, const char *expr, volatile int error_ok,
 		quitenv(NULL);
 		if (i == LAEXPR) {
 			if (error_ok == KSH_RETURN_ERROR)
-				return 0;
+				return (0);
 			errorf(null);
 		}
 		unwind(i);
@@ -213,7 +213,7 @@ v_evaluate(struct tbl *vp, const char *expr, volatile int error_ok,
 
 	quitenv(NULL);
 
-	return 1;
+	return (1);
 }
 
 static void
@@ -314,7 +314,7 @@ evalexpr(Expr_state *es, enum prec prec)
 			vl = do_ppmm(es, es->tok, vl, false);
 			token(es);
 		}
-		return vl;
+		return (vl);
 	}
 	vl = evalexpr(es, ((int) prec) - 1);
 	for (op = es->tok; IS_BINOP(op) && opinfo[(int) op].prec == prec;
@@ -453,7 +453,7 @@ evalexpr(Expr_state *es, enum prec prec)
 		} else if (op != O_TERN)
 			vl->val.i = res;
 	}
-	return vl;
+	return (vl);
 }
 
 static void
@@ -542,7 +542,7 @@ do_ppmm(Expr_state *es, enum token op, struct tbl *vasn, bool is_prefix)
 	if (!is_prefix)		/* undo the inc/dec */
 		vl->val.i = oval;
 
-	return vl;
+	return (vl);
 }
 
 static void
@@ -566,7 +566,7 @@ tempvar(void)
 	vp->areap = ATEMP;
 	vp->val.i = 0;
 	vp->name[0] = '\0';
-	return vp;
+	return (vp);
 }
 
 /* cast (string) variable to temporary integer variable */
@@ -578,7 +578,7 @@ intvar(Expr_state *es, struct tbl *vp)
 	/* try to avoid replacing a temp var with another temp var */
 	if (vp->name[0] == '\0' &&
 	    (vp->flag & (ISSET|INTEGER|EXPRLVALUE)) == (ISSET|INTEGER))
-		return vp;
+		return (vp);
 
 	vq = tempvar();
 	if (setint_v(vq, vp, es->arith) == NULL) {
@@ -590,5 +590,5 @@ intvar(Expr_state *es, struct tbl *vp)
 		vp->flag &= ~EXPRINEVAL;
 		es->evaling = (struct tbl *) 0;
 	}
-	return vq;
+	return (vq);
 }

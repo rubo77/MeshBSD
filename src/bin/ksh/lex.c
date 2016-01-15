@@ -733,7 +733,7 @@ Done:
 		iop->heredoc = (char *) 0;
 		Xfree(ws, wp);	/* free word */
 		yylval.iop = iop;
-		return REDIR;
+		return (REDIR);
 	}
 
 	if (wp == dp && state == SBASE) {
@@ -781,7 +781,7 @@ Done:
 	*wp++ = EOS;		/* terminate word */
 	yylval.cp = Xclose(ws, wp);
 	if (state == SWORD || state == SLETPAREN)	/* ONEWORD? */
-		return LWORD;
+		return (LWORD);
 	ungetsc(c);		/* unget terminator */
 
 	/* copy word to unprefixed string ident */
@@ -800,7 +800,7 @@ Done:
 		if ((cf & KEYWORD) && (p = ktsearch(&keywords, ident, h)) &&
 		    (!(cf & ESACONLY) || p->val.i == ESAC || p->val.i == '}')) {
 			afree(yylval.cp, ATEMP);
-			return p->val.i;
+			return (p->val.i);
 		}
 		if ((cf & ALIAS) && (p = ktsearch(&aliases, ident, h)) &&
 		    (p->flag & ISSET)) {
@@ -808,7 +808,7 @@ Done:
 
 			for (s = source; s->type == SALIAS; s = s->next)
 				if (s->u.tblp == p)
-					return LWORD;
+					return (LWORD);
 			/* push alias expansion */
 			s = pushs(SALIAS, source->areap);
 			s->start = s->str = p->val.s;
@@ -820,7 +820,7 @@ Done:
 		}
 	}
 
-	return LWORD;
+	return (LWORD);
 }
 
 static void
@@ -937,7 +937,7 @@ pushs(int type, Area *areap)
 		Xinit(s->xs, dummy, 256, s->areap);
 	} else
 		memset(&s->xs, 0, sizeof(s->xs));
-	return s;
+	return (s);
 }
 
 static int
@@ -947,11 +947,11 @@ getsc__(void)
 	int c;
 
 	while ((c = *s->str++) == 0) {
-		s->str = NULL;		/* return 0 for EOF by default */
+		s->str = NULL;		/* return (0) for EOF by default */
 		switch (s->type) {
 		case SEOF:
 			s->str = null;
-			return 0;
+			return (0);
 
 		case SSTDIN:
 		case SFILE:
@@ -1030,14 +1030,14 @@ getsc__(void)
 		if (s->str == NULL) {
 			s->type = SEOF;
 			s->start = s->str = null;
-			return '\0';
+			return ('\0');
 		}
 		if (s->flags & SF_ECHO) {
 			shf_puts(s->str, shl_out);
 			shf_flush(shl_out);
 		}
 	}
-	return c;
+	return (c);
 }
 
 static void
@@ -1146,7 +1146,7 @@ special_prompt_expand(char *str)
 	while ((p = strstr(p, "\\$")) != NULL) {
 		*(p+1) = 'p';
 	}
-	return str;
+	return (str);
 }
 
 void
@@ -1458,7 +1458,7 @@ pprompt(const char *cp, int ntruncate)
 int
 promptlen(const char *cp, const char **spp)
 {
-	return dopprompt(cp, 0, spp, 0);
+	return (dopprompt(cp, 0, spp, 0));
 }
 
 /* Read the variable part of a ${...} expression (ie, up to but not including
@@ -1531,7 +1531,7 @@ get_brace_var(XString *wsp, char *wp)
 		Xcheck(*wsp, wp);
 		*wp++ = c;
 	}
-	return wp;
+	return (wp);
 }
 
 /*
@@ -1562,7 +1562,7 @@ arraysub(char **strp)
 	*wp++ = '\0';
 	*strp = Xclose(ws, wp);
 
-	return depth == 0 ? 1 : 0;
+	return (depth == 0 ? 1 : 0);
 }
 
 /* Unget a char: handles case when we are already at the start of the buffer */
@@ -1573,7 +1573,7 @@ ungetsc(int c)
 		backslash_skip--;
 	/* Don't unget eof... */
 	if (source->str == null && c == '\0')
-		return source->str;
+		return (source->str);
 	if (source->str > source->start)
 		source->str--;
 	else {
@@ -1585,7 +1585,7 @@ ungetsc(int c)
 		s->next = source;
 		source = s;
 	}
-	return source->str;
+	return (source->str);
 }
 
 
@@ -1596,11 +1596,11 @@ getsc_bn(void)
 	int c, c2;
 
 	if (ignore_backslash_newline)
-		return getsc_();
+		return (getsc_());
 
 	if (backslash_skip == 1) {
 		backslash_skip = 2;
-		return getsc_();
+		return (getsc_());
 	}
 
 	backslash_skip = 0;
@@ -1614,7 +1614,7 @@ getsc_bn(void)
 			ungetsc(c2);
 			backslash_skip = 1;
 		}
-		return c;
+		return (c);
 	}
 }
 
@@ -1626,7 +1626,7 @@ push_state_(State_info *si, Lex_state *old_end)
 	new[0].ls_info.base = old_end;
 	si->base = &new[0];
 	si->end = &new[STATE_BSIZE];
-	return &new[1];
+	return (&new[1]);
 }
 
 static Lex_state *
@@ -1639,5 +1639,5 @@ pop_state_(State_info *si, Lex_state *old_end)
 
 	afree(old_base, ATEMP);
 
-	return si->base + STATE_BSIZE - 1;
+	return (si->base + STATE_BSIZE - 1);
 }

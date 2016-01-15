@@ -141,7 +141,7 @@ c_list(int multi)
 			break;
 	}
 	REJECT;
-	return t;
+	return (t);
 }
 
 static struct ioword *
@@ -151,7 +151,7 @@ synio(int cf)
 	int ishere;
 
 	if (tpeek(cf) != REDIR)
-		return NULL;
+		return (NULL);
 	ACCEPT;
 	iop = yylval.iop;
 	ishere = (iop->flag&IOTYPE) == IOHERE;
@@ -165,7 +165,7 @@ synio(int cf)
 		*herep++ = iop;
 	} else
 		iop->name = yylval.cp;
-	return iop;
+	return (iop);
 }
 
 static void
@@ -209,7 +209,7 @@ get_command(int cf)
 		afree((void*) iops, ATEMP);
 		XPfree(args);
 		XPfree(vars);
-		return NULL; /* empty line */
+		return (NULL); /* empty line */
 
 	case LWORD:
 	case REDIR:
@@ -404,7 +404,7 @@ get_command(int cf)
 		XPfree(vars);
 	}
 
-	return t;
+	return (t);
 }
 
 static struct op *
@@ -427,7 +427,7 @@ dogroup(void)
 		syntaxerr((char *) 0);
 	list = c_list(true);
 	musthave(c, KEYWORD|ALIAS);
-	return list;
+	return (list);
 }
 
 static struct op *
@@ -464,7 +464,7 @@ elsepart(void)
 	default:
 		REJECT;
 	}
-	return NULL;
+	return (NULL);
 }
 
 static struct op *
@@ -578,7 +578,7 @@ function_body(char *name,
 	if (!old_func_parse)
 		e->flags &= ~EF_FUNC_PARSE;
 
-	return t;
+	return (t);
 }
 
 static char **
@@ -592,14 +592,14 @@ wordlist(void)
 	if ((c = token(CONTIN|KEYWORD|ALIAS)) != IN) {
 		if (c != ';') /* non-POSIX, but at&t ksh accepts a ; here */
 			REJECT;
-		return NULL;
+		return (NULL);
 	}
 	while ((c = token(0)) == LWORD)
 		XPput(args, yylval.cp);
 	if (c != '\n' && c != ';')
 		syntaxerr((char *) 0);
 	XPput(args, NULL);
-	return (char **) XPclose(args);
+	return ((char **) XPclose(args));
 }
 
 /*
@@ -761,7 +761,7 @@ compile(Source *s)
 	herep = heres;
 	source = s;
 	yyparse();
-	return outtree;
+	return (outtree);
 }
 
 /* This kludge exists to take care of sh/at&t ksh oddity in which
@@ -778,7 +778,7 @@ static int
 assign_command(char *s)
 {
 	if (Flag(FPOSIX) || !*s)
-		return 0;
+		return (0);
 	return (strcmp(s, "alias") == 0) ||
 	    (strcmp(s, "export") == 0) ||
 	    (strcmp(s, "readonly") == 0) ||
@@ -791,8 +791,8 @@ inalias(struct source *s)
 {
 	for (; s && s->type == SALIAS; s = s->next)
 		if (!(s->flags & SF_ALIASEND))
-			return 1;
-	return 0;
+			return (1);
+	return (0);
 }
 
 
@@ -857,7 +857,7 @@ dbtestp_isa(Test_env *te, Test_meta meta)
 			XPput(*te->pos.av, save);
 		}
 	}
-	return ret;
+	return (ret);
 }
 
 static const char *
@@ -871,14 +871,14 @@ dbtestp_getopnd(Test_env *te, Test_op op, int do_eval)
 	ACCEPT;
 	XPput(*te->pos.av, yylval.cp);
 
-	return null;
+	return (null);
 }
 
 static int
 dbtestp_eval(Test_env *te, Test_op op, const char *opnd1, const char *opnd2,
     int do_eval)
 {
-	return 1;
+	return (1);
 }
 
 static void
