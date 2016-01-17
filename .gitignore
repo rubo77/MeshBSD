@@ -140,6 +140,7 @@
 !/src/bin/ksh/PROJECTS
 !/src/bin/ksh/README
 !/src/bin/ksh/alloc.c
+!/src/bin/ksh/args.c
 !/src/bin/ksh/c_ksh.c
 !/src/bin/ksh/c_sh.c
 !/src/bin/ksh/c_test.c
