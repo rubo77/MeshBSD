@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2016 Henning Matyschok
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
 /*	$OpenBSD: exec.c,v 1.50 2013/06/10 21:09:27 millert Exp $	*/
 
 /*
@@ -25,14 +52,20 @@ static int	dbteste_eval(Test_env *, Test_op, const char *, const char *,
 		    int);
 static void	dbteste_error(Test_env *, int, const char *);
 
+extern char *_ksh_name;
+
+extern char *read_cmd;
+extern char *read_options;
+extern char *read_reply;
 
 /*
  * execute command tree
  */
 int
 execute(struct op *volatile t,
-    volatile int flags, volatile int *xerrok)		/* if XEXEC don't fork */
+    volatile int flags, volatile int *xerrok0)		/* if XEXEC don't fork */
 {
+	volatile int *xerrok;
 	int i, dummy = 0;
 	volatile int rv = 0;
 	int pv[2];
@@ -42,11 +75,16 @@ execute(struct op *volatile t,
 	struct tbl *tp = NULL;
 
 	if (t == NULL)
-		return (0);
+		goto out;
+/*
+ * XXX: This was necessary to avoid clobbering of xerrok 
+ * XXX: variable during exchild called fork(2).
+ */
+	xerrok = &dummy;
 
 	/* Caller doesn't care if XERROK should propagate. */
-	if (xerrok == NULL)
-		xerrok = &dummy;
+	if (xerrok0 != NULL)
+		dummy = *xerrok0;
 
 	/* Is this the end of a pipeline?  If so, we want to evaluate the
 	 * command arguments
@@ -56,9 +94,13 @@ execute(struct op *volatile t,
 		tp = eval_execute_args(t, &ap);
 	}
 	 */
-	if ((flags&XFORK) && !(flags&XEXEC) && t->type != TPIPE)
-		return exchild(t, flags & ~XTIME, xerrok, -1); /* run in sub-process */
-
+	if ((flags&XFORK) && !(flags&XEXEC) && t->type != TPIPE) {
+/* 
+ * run in sub-process 
+ */		
+		rv = exchild(t, flags & ~XTIME, xerrok, -1);
+		goto done; 
+	}
 	newenv(E_EXEC);
 	if (trap)
 		runtraps(0);
@@ -378,6 +420,9 @@ execute(struct op *volatile t,
 		if (Flag(FERREXIT))
 			unwind(LERROR);
 	}
+done:
+	*xerrok0 = dummy;
+out:	
 	return (rv);
 }
 
@@ -571,10 +616,12 @@ comexec(struct op *t, struct tbl *volatile tp, char **ap, volatile int flags,
 		 * $0 unchanged.
 		 */
 		old_kshname = kshname;
-		if (tp->flag & FKSH)
+		if (tp->flag & FKSH) {
 			kshname = ap[0];
-		else
-			ap[0] = (char *) kshname;
+			free(_ksh_name);
+			_ksh_name = strdup(kshname);
+		} else
+			ap[0] = _ksh_name;
 		e->loc->argv = ap;
 		for (i = 0; *ap++ != NULL; i++)
 			;
@@ -687,21 +734,25 @@ comexec(struct op *t, struct tbl *volatile tp, char **ap, volatile int flags,
 static void
 scriptexec(struct op *tp, char **ap)
 {
-	char *shell;
+	char *_shell0;
+	char *_shell;
 
-	shell = str_val(global(EXECSHELL_STR));
-	if (shell && *shell)
-		shell = search(shell, path, X_OK, (int *) 0);
-	if (!shell || !*shell)
-		shell = EXECSHELL;
-
+	_shell0 = str_val(global(EXECSHELL_STR));
+	if (_shell0 && *_shell0)
+		_shell0 = search(_shell0, path, X_OK, (int *) 0);
+	if (!_shell0 || !*_shell0)
+		_shell = strdup(EXECSHELL);
+	else 
+		_shell = strdup(_shell0);
+	
 	*tp->args-- = tp->str;
-	*tp->args = shell;
+	*tp->args = _shell;
 
 	execve(tp->args[0], tp->args, ap);
 
 	/* report both the program that was run and the bogus shell */
-	errorf("%s: %s: %s", tp->str, shell, strerror(errno));
+	errorf("%s: %s: %s", tp->str, _shell, strerror(errno));
+	free(_shell);
 }
 
 int
@@ -816,7 +867,7 @@ builtin(const char *name, int (*func) (char **))
  * either function, hashed command, or built-in (in that order)
  */
 struct tbl *
-findcom(const char *name, int flags)
+findcom(char *name, int flags)
 {
 	static struct tbl temp;
 	unsigned int h = hash(name);
@@ -934,15 +985,15 @@ flushcom(int all)	/* just relative or all */
 
 /* Check if path is something we want to find.  Returns -1 for failure. */
 int
-search_access(const char *path, int mode,
+search_access(const char *_path, int mode,
     int *errnop)	/* set if candidate found, but not suitable */
 {
 	int ret, err = 0;
 	struct stat statb;
 
-	if (stat(path, &statb) < 0)
+	if (stat(_path, &statb) < 0)
 		return (-1);
-	ret = access(path, mode);
+	ret = access(_path, mode);
 	if (ret < 0)
 		err = errno; /* File exists, but we can't access it */
 	else if (mode == X_OK && (!S_ISREG(statb.st_mode) ||
@@ -960,7 +1011,7 @@ search_access(const char *path, int mode,
  * search for command with PATH
  */
 char *
-search(const char *name, const char *path,
+search(char *name, const char *_path,
     int mode,		/* R_OK or X_OK */
     int *errnop)	/* set if candidate found, but not suitable */
 {
@@ -973,14 +1024,14 @@ search(const char *name, const char *path,
 		*errnop = 0;
 	if (strchr(name, '/')) {
 		if (search_access(name, mode, errnop) == 0)
-			return ((char *) name);
+			return (name);
 		return (NULL);
 	}
 
 	namelen = strlen(name) + 1;
 	Xinit(xs, xp, 128, ATEMP);
 
-	sp = path;
+	sp = _path;
 	while (sp != NULL) {
 		xp = Xstring(xs, xp);
 		if (!(p = strchr(sp, ':')))
@@ -1231,8 +1282,11 @@ herein(const char *content, int sub)
 static char *
 do_selectargs(char **ap, bool print_menu)
 {
-	static const char *const read_args[] = {
-		"read", "-r", "REPLY", (char *) 0
+	char *read_args[] = {
+		read_cmd, 
+		read_options, 
+		read_reply, 
+		NULL,
 	};
 	char *s;
 	int i, argct;
@@ -1248,7 +1302,7 @@ do_selectargs(char **ap, bool print_menu)
 		if (print_menu || !*str_val(global("REPLY")))
 			pr_menu(ap);
 		shellf("%s", str_val(global("PS3")));
-		if (call_builtin(findcom("read", FC_BI), (char **) read_args))
+		if (call_builtin(findcom(read_cmd, FC_BI), read_args))
 			return ((char *) 0);
 		s = str_val(global("REPLY"));
 		if (*s) {
@@ -1282,10 +1336,10 @@ select_fmt_entry(void *arg, int i, char *buf, int buflen)
  *	print a select style menu
  */
 int
-pr_menu(char *const *ap)
+pr_menu(char **ap)
 {
 	struct select_menu_info smi;
-	char *const *pp;
+	char **pp;
 	int nwidth, dwidth;
 	int i, n;
 
@@ -1332,9 +1386,9 @@ plain_fmt_entry(void *arg, int i, char *buf, int buflen)
 }
 
 int
-pr_list(char *const *ap)
+pr_list(char **ap)
 {
-	char *const *pp;
+	char **pp;
 	int nwidth;
 	int i, n;
 

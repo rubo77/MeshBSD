@@ -39,8 +39,8 @@
  * where "hash -r" releases set aliases.
  */
  
-extern char *c_unalias_cmd;  
-extern char *c_unalias_options; 
+extern char *unalias_cmd;  
+extern char *unalias_options; 
 
 int
 c_cd(char **wp)
@@ -915,8 +915,8 @@ c_alias(char **wp)
 	/* "hash -r" means reset all the tracked aliases.. */
 	if (rflag) {
 		char *c_unalias_argv[] = {
-			c_unalias_cmd,
-			c_unalias_options,
+			unalias_cmd,
+			unalias_options,
 			NULL,
 		};
 

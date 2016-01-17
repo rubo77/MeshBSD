@@ -99,11 +99,6 @@ main(int argc, char *argv[])
 	char **wp;
 	struct env env;
 	pid_t ppid;
-/*
- * Initialze argument vecors and 
- * constants for builtin comands.
- */
-	initargs(); 
 
 	/* make sure argv[] is sane */
 	if (!*argv) {
@@ -401,7 +396,12 @@ main(int argc, char *argv[])
 		alarm_init();
 	} else
 		Flag(FTRACKALL) = 1;	/* set after ENV */
-
+/*
+ * Initialze argument vecors and 
+ * constants for builtin comands.
+ */
+	initargs(); 
+	
 	shell(s, true);	/* doesn't return */
 	return (0);
 }

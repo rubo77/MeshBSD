@@ -1149,10 +1149,10 @@ debunk(char *dp, const char *sp, size_t dlen)
 	char *d, *s;
 
 	if ((s = strchr(sp, MAGIC))) {
-		if (s - sp >= dlen)
+		if ((size_t)(s - sp) >= dlen)
 			return (dp);
 		memcpy(dp, sp, s - sp);
-		for (d = dp + (s - sp); *s && (d - dp < dlen); s++)
+		for (d = dp + (s - sp); *s && ((size_t)(d - dp) < dlen); s++)
 			if (!ISMAGIC(*s) || !(*++s & 0x80) ||
 			    !strchr("*+?@! ", *s & 0x7f))
 				*d++ = *s;
@@ -1160,7 +1160,7 @@ debunk(char *dp, const char *sp, size_t dlen)
 				/* extended pattern operators: *+?@! */
 				if ((*s & 0x7f) != ' ')
 					*d++ = *s & 0x7f;
-				if (d - dp < dlen)
+				if ((size_t)(d - dp) < dlen)
 					*d++ = '(';
 			}
 		*d = '\0';

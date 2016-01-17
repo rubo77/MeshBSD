@@ -292,7 +292,7 @@ static void	glob_path(int flags, const char *pat, XPtrV *wp,
 				const char *path);
 
 void
-x_print_expansions(int nwords, char *const *words, int is_command)
+x_print_expansions(int nwords, char **words, int is_command)
 {
 	int use_copy = 0;
 	int prefix_len;

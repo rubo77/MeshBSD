@@ -37,10 +37,10 @@
 
 extern struct timeval j_usrtime, j_systime; /* computed by j_wait */
 
-extern char *c_typeset_cmd;  
-extern char *c_typeset_options; 
+extern char *set_cmd;  
+extern char *set_options; 
 
-extern char *c_read_reply;
+extern char *read_reply;
 
 extern char *p_time_ws;
 extern char *p_time_nl;
@@ -320,7 +320,7 @@ c_read(char **wp)
 	wp += builtin_opt.optind;
 
 	if (*wp == NULL)
-		*--wp = c_read_reply;
+		*--wp = read_reply;
 
 	/* Since we can't necessarily seek backwards on non-regular files,
 	 * don't buffer them so we can't read too much.
@@ -641,8 +641,8 @@ c_set(char **wp)
 
 	if (wp[1] == NULL) {
 		char *c_typeset_argv[] = {
-			c_typeset_cmd,
-			c_typeset_options,
+			set_cmd,
+			set_options,
 			NULL,
 		};
 		return (c_typeset(c_typeset_argv));

@@ -73,12 +73,12 @@ int	shcomexec(char **);
 struct tbl * findfunc(const char *, unsigned int, int);
 int	define(const char *, struct op *);
 void	builtin(const char *, int (*)(char **));
-struct tbl *	findcom(const char *, int);
+struct tbl *	findcom(char *, int);
 void	flushcom(int);
-char *	search(const char *, const char *, int, int *);
+char *	search(char *, const char *, int, int *);
 int	search_access(const char *, int, int *);
-int	pr_menu(char *const *);
-int	pr_list(char *const *);
+int	pr_menu(char **);
+int	pr_list(char **);
 /* expr.c */
 int	evaluate(const char *, long *, int, bool);
 int	v_evaluate(struct tbl *, const char *, volatile int, bool);

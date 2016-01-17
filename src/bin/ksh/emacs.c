@@ -194,12 +194,11 @@ static int	x_fold_capitalize(int);
 static int	x_fold_lower(int);
 static int	x_fold_upper(int);
 static int	x_set_arg(int);
-static int	x_comment(int);
 #ifdef DEBUG
 static int	x_debug_info(int);
 #endif
 
-static const struct x_ftab x_ftab[] = {
+static struct x_ftab x_ftab[] = {
 	{ x_abort,		"abort",			0 },
 	{ x_beg_hist,		"beginning-of-history",		0 },
 	{ x_comp_comm,		"complete-command",		0 },
@@ -262,6 +261,8 @@ static const struct x_ftab x_ftab[] = {
 #endif
 	{ 0, 0, 0 },
 };
+
+extern char *_ksh_version;
 
 int
 x_emacs(char *buf, size_t len)
@@ -474,7 +475,7 @@ x_emacs_putbuf(const char *s, size_t len)
 }
 
 static int
-x_del_back(int c)
+x_del_back(int c __unused)
 {
 	int col = xcp - xbuf;
 
@@ -490,7 +491,7 @@ x_del_back(int c)
 }
 
 static int
-x_del_char(int c)
+x_del_char(int c __unused)
 {
 	int nleft = xep - xcp;
 
@@ -560,28 +561,28 @@ x_delete(int nc, int push)
 }
 
 static int
-x_del_bword(int c)
+x_del_bword(int c __unused)
 {
 	x_delete(x_bword(), true);
 	return (KSTD);
 }
 
 static int
-x_mv_bword(int c)
+x_mv_bword(int c __unused)
 {
 	(void)x_bword();
 	return (KSTD);
 }
 
 static int
-x_mv_fword(int c)
+x_mv_fword(int c __unused)
 {
 	x_goto(xcp + x_fword());
 	return (KSTD);
 }
 
 static int
-x_del_fword(int c)
+x_del_fword(int c __unused)
 {
 	x_delete(x_fword(), true);
 	return (KSTD);
@@ -703,7 +704,7 @@ x_zotc(int c)
 }
 
 static int
-x_mv_back(int c)
+x_mv_back(int c __unused)
 {
 	int col = xcp - xbuf;
 
@@ -718,7 +719,7 @@ x_mv_back(int c)
 }
 
 static int
-x_mv_forw(int c)
+x_mv_forw(int c __unused)
 {
 	int nleft = xep - xcp;
 
@@ -773,7 +774,7 @@ x_search_char_back(int c)
 }
 
 static int
-x_newline(int c)
+x_newline(int c __unused)
 {
 	x_e_putc('\r');
 	x_e_putc('\n');
@@ -783,7 +784,7 @@ x_newline(int c)
 }
 
 static int
-x_end_of_text(int c)
+x_end_of_text(int c __unused)
 {
 	x_zotc(edchars.eof);
 	x_putc('\r');
@@ -792,20 +793,40 @@ x_end_of_text(int c)
 	return (KEOL);
 }
 
-static int x_beg_hist(int c) { x_load_hist(history); return (KSTD);}
+static int 
+x_beg_hist(int c __unused) 
+{ 
+	x_load_hist(history); 
+	return (KSTD);
+}
 
-static int x_end_hist(int c) { x_load_hist(histptr); return (KSTD);}
+static int 
+x_end_hist(int c __unused) 
+{ 
+	x_load_hist(histptr); 
+	return (KSTD);
+}
 
-static int x_prev_com(int c) { x_load_hist(x_histp - x_arg); return (KSTD);}
+static int 
+x_prev_com(int c __unused) 
+{ 
+	x_load_hist(x_histp - x_arg); 
+	return (KSTD);
+}
 
-static int x_next_com(int c) { x_load_hist(x_histp + x_arg); return (KSTD);}
+static int 
+x_next_com(int c __unused) 
+{ 
+	x_load_hist(x_histp + x_arg); 
+	return (KSTD);
+}
 
 /* Goto a particular history number obtained from argument.
  * If no argument is given history 1 is probably not what you
  * want so we'll simply go to the oldest one.
  */
 static int
-x_goto_hist(int c)
+x_goto_hist(int c __unused)
 {
 	if (x_arg_defaulted)
 		x_load_hist(history);
@@ -851,7 +872,7 @@ x_eot_del(int c)
 }
 
 static void *
-kb_find_hist_func(char c)
+kb_find_hist_func(char c __unused)
 {
 	struct kb_entry		*k;
 	char			line[LINE + 1];
@@ -963,7 +984,7 @@ x_match(char *str, char *pat)
 }
 
 static int
-x_del_line(int c)
+x_del_line(int c __unused)
 {
 	int	i, j;
 
@@ -981,21 +1002,21 @@ x_del_line(int c)
 }
 
 static int
-x_mv_end(int c)
+x_mv_end(int c __unused)
 {
 	x_goto(xep);
 	return (KSTD);
 }
 
 static int
-x_mv_begin(int c)
+x_mv_begin(int c __unused)
 {
 	x_goto(xbuf);
 	return (KSTD);
 }
 
 static int
-x_draw_line(int c)
+x_draw_line(int c __unused)
 {
 	x_redraw(-1);
 	return (KSTD);
@@ -1009,7 +1030,7 @@ x_draw_line(int c)
 static void
 x_redraw(int limit)
 {
-	int	i, j, truncate = 0;
+	int	i, j, _truncate = 0;
 	char	*cp;
 
 	x_adj_ok = 0;
@@ -1021,9 +1042,9 @@ x_redraw(int limit)
 	if (xbp == xbuf) {
 		x_col = promptlen(prompt, (const char **) 0);
 		if (x_col > xx_cols)
-			truncate = (x_col / xx_cols) * xx_cols;
+			_truncate = (x_col / xx_cols) * xx_cols;
 		if (prompt_redraw)
-			pprompt(prompt + prompt_skip, truncate);
+			pprompt(prompt + prompt_skip, _truncate);
 	}
 	if (x_col > xx_cols)
 		x_col = x_col - (x_col / xx_cols) * xx_cols;
@@ -1066,7 +1087,7 @@ x_redraw(int limit)
 }
 
 static int
-x_transpose(int c)
+x_transpose(int c __unused)
 {
 	char	tmp;
 
@@ -1118,14 +1139,14 @@ x_transpose(int c)
 }
 
 static int
-x_literal(int c)
+x_literal(int c __unused)
 {
 	x_literal_set = 1;
 	return (KSTD);
 }
 
 static int
-x_kill(int c)
+x_kill(int c __unused)
 {
 	int col = xcp - xbuf;
 	int lastcol = xep - xbuf;
@@ -1155,7 +1176,7 @@ x_push(int nchars)
 }
 
 static int
-x_yank(int c)
+x_yank(int c __unused)
 {
 	if (killsp == 0)
 		killtp = KILLSIZE;
@@ -1173,7 +1194,7 @@ x_yank(int c)
 }
 
 static int
-x_meta_yank(int c)
+x_meta_yank(int c __unused)
 {
 	int	len;
 	if ((x_last_command != x_yank && x_last_command != x_meta_yank) ||
@@ -1197,7 +1218,7 @@ x_meta_yank(int c)
 }
 
 static int
-x_abort(int c)
+x_abort(int c __unused)
 {
 	/* x_zotc(c); */
 	xlp = xep = xcp = xbp = xbuf;
@@ -1207,7 +1228,7 @@ x_abort(int c)
 }
 
 static int
-x_error(int c)
+x_error(int c __unused)
 {
 	x_e_putc(BEL);
 	return (KSTD);
@@ -1229,19 +1250,25 @@ x_stuffreset(int c)
 #endif
 }
 
+#ifdef TIOCSTI
 static int
 x_stuff(int c)
 {
-#ifdef TIOCSTI
 	char	ch = c;
 	bool	savmode = x_mode(false);
 
 	(void)ioctl(TTY, TIOCSTI, &ch);
 	(void)x_mode(savmode);
 	x_redraw(-1);
-#endif
 	return (KSTD);
 }
+#else
+static int
+x_stuff(int c __unused)
+{
+	return (KSTD);
+}
+#endif /* TIOCSTI */
 
 static char *
 kb_encode(const char *s)
@@ -1271,7 +1298,7 @@ static char *
 kb_decode(const char *s)
 {
 	static char		l[LINE + 1];
-	int			i, at = 0;
+	size_t			i, at = 0;
 
 	l[0] = '\0';
 	for (i = 0; i < strlen(s); i++) {
@@ -1315,15 +1342,16 @@ kb_del(struct kb_entry *k)
 static struct kb_entry *
 kb_add_string(void *func, void *args, char *str)
 {
-	int			i, count;
+	size_t			i, count;
 	struct kb_entry		*k;
 	struct x_ftab		*xf = NULL;
 
-	for (i = 0; i < NELEM(x_ftab); i++)
+	for (i = 0; i < NELEM(x_ftab); i++) {
 		if (x_ftab[i].xf_func == func) {
-			xf = (struct x_ftab *)&x_ftab[i];
+			xf = &x_ftab[i];
 			break;
 		}
+	}
 	if (xf == NULL)
 		return (NULL);
 
@@ -1385,7 +1413,7 @@ x_bind(const char *a1, const char *a2,
 	int macro,		/* bind -m */
 	int list)		/* bind -l */
 {
-	int			i;
+	size_t			i;
 	struct kb_entry		*k, *kb;
 	char			in[LINE + 1];
 
@@ -1613,14 +1641,14 @@ x_emacs_keys(X_chars *ec)
 }
 
 static int
-x_set_mark(int c)
+x_set_mark(int c __unused)
 {
 	xmp = xcp;
 	return (KSTD);
 }
 
 static int
-x_kill_region(int c)
+x_kill_region(int c __unused)
 {
 	int	rsize;
 	char	*xr;
@@ -1643,7 +1671,7 @@ x_kill_region(int c)
 }
 
 static int
-x_xchg_point_mark(int c)
+x_xchg_point_mark(int c __unused)
 {
 	char	*tmp;
 
@@ -1663,9 +1691,9 @@ x_version(int c)
 	char *o_xbuf = xbuf, *o_xend = xend;
 	char *o_xbp = xbp, *o_xep = xep, *o_xcp = xcp;
 	int lim = x_lastcp() - xbp;
-
-	xbuf = xbp = xcp = (char *) ksh_version + 4;
-	xend = xep = (char *) ksh_version + 4 + strlen(ksh_version + 4);
+	
+	xbuf = xbp = xcp = _ksh_version + 4;
+	xend = xep = _ksh_version + 4 + strlen(_ksh_version + 4);
 	x_redraw(lim);
 	x_flush();
 
@@ -1675,7 +1703,7 @@ x_version(int c)
 	xbp = o_xbp;
 	xep = o_xep;
 	xcp = o_xcp;
-	x_redraw(strlen(ksh_version));
+	x_redraw(strlen(_ksh_version));
 
 	if (c < 0)
 		return (KSTD);
@@ -1687,7 +1715,7 @@ x_version(int c)
 }
 
 static int
-x_noop(int c)
+x_noop(int c __unused)
 {
 	return (KSTD);
 }
@@ -1697,49 +1725,49 @@ x_noop(int c)
  */
 
 static int
-x_comp_comm(int c)
+x_comp_comm(int c __unused)
 {
 	do_complete(XCF_COMMAND, CT_COMPLETE);
 	return (KSTD);
 }
 static int
-x_list_comm(int c)
+x_list_comm(int c __unused)
 {
 	do_complete(XCF_COMMAND, CT_LIST);
 	return (KSTD);
 }
 static int
-x_complete(int c)
+x_complete(int c __unused)
 {
 	do_complete(XCF_COMMAND_FILE, CT_COMPLETE);
 	return (KSTD);
 }
 static int
-x_enumerate(int c)
+x_enumerate(int c __unused)
 {
 	do_complete(XCF_COMMAND_FILE, CT_LIST);
 	return (KSTD);
 }
 static int
-x_comp_file(int c)
+x_comp_file(int c __unused)
 {
 	do_complete(XCF_FILE, CT_COMPLETE);
 	return (KSTD);
 }
 static int
-x_list_file(int c)
+x_list_file(int c __unused)
 {
 	do_complete(XCF_FILE, CT_LIST);
 	return (KSTD);
 }
 static int
-x_comp_list(int c)
+x_comp_list(int c __unused)
 {
 	do_complete(XCF_COMMAND_FILE, CT_COMPLIST);
 	return (KSTD);
 }
 static int
-x_expand(int c)
+x_expand(int c __unused)
 {
 	char **words;
 	int nwords = 0;
@@ -1905,7 +1933,7 @@ x_e_putc(int c)
 
 #ifdef DEBUG
 static int
-x_debug_info(int c)
+x_debug_info(int c __unused)
 {
 	x_flush();
 	shellf("\nksh debug:\n");
@@ -1964,7 +1992,7 @@ x_set_arg(int c)
 
 /* Comment or uncomment the current line. */
 static int
-x_comment(int c)
+x_comment(int c __unused)
 {
 	int oldsize = x_size_str(xbuf);
 	int len = xep - xbuf;
@@ -1978,7 +2006,7 @@ x_comment(int c)
 		xcp = xbp = xbuf;
 		x_redraw(oldsize);
 		if (ret > 0)
-			return x_newline('\n');
+			return (x_newline('\n'));
 	}
 	return (KSTD);
 }
@@ -2000,7 +2028,7 @@ x_comment(int c)
  */
 
 static int
-x_prev_histword(int c)
+x_prev_histword(int c __unused)
 {
 	char *rcp;
 	char *cp;
@@ -2021,7 +2049,7 @@ x_prev_histword(int c)
 			rcp++;
 		x_ins(rcp);
 	} else {
-		int c;
+		int _c; /* XXX: ??!? */
 
 		rcp = cp;
 		/*
@@ -2038,31 +2066,31 @@ x_prev_histword(int c)
 		cp = rcp;
 		while (*rcp && !is_cfs(*rcp))
 			rcp++;
-		c = *rcp;
+		_c = *rcp;
 		*rcp = '\0';
 		x_ins(cp);
-		*rcp = c;
+		*rcp = _c;
 	}
 	return (KSTD);
 }
 
 /* Uppercase N(1) words */
 static int
-x_fold_upper(int c)
+x_fold_upper(int c __unused)
 {
 	return (x_fold_case('U'));
 }
 
 /* Lowercase N(1) words */
 static int
-x_fold_lower(int c)
+x_fold_lower(int c __unused)
 {
 	return (x_fold_case('L'));
 }
 
 /* Lowercase N(1) words */
 static int
-x_fold_capitalize(int c)
+x_fold_capitalize(int c __unused)
 {
 	return (x_fold_case('C'));
 }

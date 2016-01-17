@@ -388,7 +388,7 @@ exchild(struct op *t, int flags, volatile int *xerrok,
     int close_fd)	/* used if XPCLOSE or XCCLOSE */
 {
 	static Proc	*last_proc;	/* for pipelines */
-
+	
 	int		i;
 	sigset_t	omask;
 	Proc		*p;
@@ -401,7 +401,8 @@ exchild(struct op *t, int flags, volatile int *xerrok,
 		/* Clear XFORK|XPCLOSE|XCCLOSE|XCOPROC|XPIPEO|XPIPEI|XXCOM|XBGND
 		 * (also done in another execute() below)
 		 */
-		return (execute(t, flags & (XEXEC | XERROK), xerrok));
+		rv = execute(t, flags & (XEXEC | XERROK), xerrok));
+		goto done;
 	}
 	/* no SIGCHLD's while messing with job and process lists */
 	sigprocmask(SIG_BLOCK, &sm_sigchld, &omask);
@@ -567,7 +568,7 @@ exchild(struct op *t, int flags, volatile int *xerrok,
 	}
 
 	sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
-
+done:
 	return (rv);
 }
 
