@@ -418,22 +418,22 @@ evalexpr(Expr_state *es, enum prec prec)
 			break;
 		case O_TERN:
 			{
-				int e = vl->val.i != 0;
+				int _e = vl->val.i != 0;
 
-				if (!e)
+				if (!_e)
 					es->noassign++;
 				vl = evalexpr(es, MAX_PREC);
-				if (!e)
+				if (!_e)
 					es->noassign--;
 				if (es->tok != CTERN)
 					evalerr(es, ET_STR, "missing :");
 				token(es);
-				if (e)
+				if (_e)
 					es->noassign++;
 				vr = evalexpr(es, P_TERN);
-				if (e)
+				if (_e)
 					es->noassign--;
-				vl = e ? vl : vr;
+				vl = _e ? vl : vr;
 			}
 			break;
 		case O_ASN:

@@ -917,7 +917,7 @@ c_alias(char **wp)
 		char *c_unalias_argv[] = {
 			unalias_cmd,
 			unalias_options,
-			NULL,
+			NULL
 		};
 
 		if (!tflag || *wp) {

@@ -401,7 +401,7 @@ exchild(struct op *t, int flags, volatile int *xerrok,
 		/* Clear XFORK|XPCLOSE|XCCLOSE|XCOPROC|XPIPEO|XPIPEI|XXCOM|XBGND
 		 * (also done in another execute() below)
 		 */
-		rv = execute(t, flags & (XEXEC | XERROK), xerrok));
+		rv = execute(t, flags & (XEXEC | XERROK), xerrok);
 		goto done;
 	}
 	/* no SIGCHLD's while messing with job and process lists */
@@ -1139,7 +1139,7 @@ j_waitj(Job *j,
  */
 /* ARGSUSED */
 static void
-j_sigchld(int sig)
+j_sigchld(int sig __unused)
 {
 	int		errno_ = errno;
 	Job		*j;

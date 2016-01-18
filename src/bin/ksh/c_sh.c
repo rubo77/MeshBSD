@@ -643,7 +643,7 @@ c_set(char **wp)
 		char *c_typeset_argv[] = {
 			set_cmd,
 			set_options,
-			NULL,
+			NULL
 		};
 		return (c_typeset(c_typeset_argv));
 	}

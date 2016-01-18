@@ -40,19 +40,22 @@
 #include <stdlib.h>
 #include <sysexits.h>
 
+char *ksh_cmd;
+
 /*
  * Various builtin commands and options.
  */
- 
-char *unalias_cmd;  
-char *unalias_options;
+  
+char *read_cmd;
+char *read_options;
+char *read_reply;
 
 char *set_cmd;  
 char *set_options; 
 
-char *read_cmd;
-char *read_options;
-char *read_reply;
+char *unalias_cmd;  
+char *unalias_options;
+
 
 /*
  * By p_time accepted literals.
@@ -83,15 +86,17 @@ char *_ksh_name;
 static void 	
 args_atexit(void)
 {
-	free(unalias_cmd);
-	free(unalias_options);
+	free(ksh_cmd);
 
-	free(set_cmd);  
-	free(set_options); 
-	
 	free(read_cmd);
 	free(read_options);
 	free(read_reply);
+	
+	free(set_cmd);  
+	free(set_options); 
+	
+	free(unalias_cmd);
+	free(unalias_options);
 	
 	free(p_time_ws);
 	free(p_time_nl);
@@ -107,15 +112,18 @@ args_atexit(void)
 void 
 initargs(void)
 {
-	unalias_cmd = strdup("unalias");  
-	unalias_options = strdup("-ta");
-	
-	set_cmd = strdup("set");  
-	set_options = strdup("-"); 
+	ksh_cmd = strdup("ksh");
 	
 	read_cmd = strdup("read");
 	read_options = strdup("-r");
 	read_reply = strdup("REPLY");
+	
+	set_cmd = strdup("set");  
+	set_options = strdup("-"); 
+	
+	unalias_cmd = strdup("unalias");  
+	unalias_options = strdup("-ta");
+	
 	
 	p_time_ws = strdup(" ");
 	p_time_ws = strdup("\n");

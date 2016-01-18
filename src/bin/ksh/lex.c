@@ -5,6 +5,7 @@
  */
 
 #include "sh.h"
+#include <time.h>
 #include <libgen.h>
 #include <ctype.h>
 
@@ -1150,7 +1151,7 @@ special_prompt_expand(char *str)
 }
 
 void
-set_prompt(int to, Source *s)
+set_prompt(int to, Source *s __unused)
 {
 	char *ps1;
 	Area *saved_atemp;
@@ -1414,9 +1415,9 @@ dopprompt(const char *sp, int ntruncate, const char **spp, int doprint)
 		else if (*++cp == '!')
 			c = *cp++;
 		else {
-			char *p;
+			char *_p;
 
-			shf_snprintf(p = nbuf, sizeof(nbuf), "%d",
+			shf_snprintf(_p = nbuf, sizeof(nbuf), "%d",
 			    source->line + 1);
 			len = strlen(nbuf);
 			if (ntruncate) {
@@ -1424,12 +1425,12 @@ dopprompt(const char *sp, int ntruncate, const char **spp, int doprint)
 					ntruncate -= len;
 					continue;
 				}
-				p += ntruncate;
+				_p += ntruncate;
 				len -= ntruncate;
 				ntruncate = 0;
 			}
 			if (doprint)
-				shf_write(p, len, shl_out);
+				shf_write(_p, len, shl_out);
 			if (counting && !indelimit && !delimitthis)
 				totlen += len;
 			continue;

@@ -7,10 +7,13 @@
 #define	EXTERN				/* define EXTERNs in sh.h */
 
 #include "sh.h"
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <pwd.h>
 
 extern char **environ;
+extern char *ksh_cmd;
+extern char *_ksh_name;
 
 /*
  * global data
@@ -62,7 +65,7 @@ static const char *initcoms [] = {
 	NULL
 };
 
-char username[_PW_NAME_LEN + 1];
+char username[MAXLOGNAME + 1];
 
 #define version_param  (initcoms[2])
 
@@ -79,7 +82,7 @@ make_argv(int argc, char *argv[])
 
 	if (strcmp(argv[0], kshname) != 0) {
 		nargv = alloc(sizeof(char *) * (argc + 1), &aperm);
-		nargv[0] = (char *) kshname;
+		nargv[0] = _ksh_name;
 		for (i = 1; i < argc; i++)
 			nargv[i] = argv[i];
 		nargv[i] = NULL;
@@ -102,11 +105,11 @@ main(int argc, char *argv[])
 
 	/* make sure argv[] is sane */
 	if (!*argv) {
-		static const char *empty_argv[] = {
-			"ksh", (char *) 0
+		char *empty_argv[] = {
+			ksh_cmd, NULL
 		};
 
-		argv = (char **) empty_argv;
+		argv = empty_argv;
 		argc = 1;
 	}
 	kshname = *argv;

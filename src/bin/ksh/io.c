@@ -416,18 +416,18 @@ maketemp(Area *ap, Temp_type type, struct temp **tlist)
 	struct temp *tp;
 	int len;
 	int fd;
-	char *path;
+	char *_path;
 	const char *dir;
 
 	dir = tmpdir ? tmpdir : "/tmp";
 	/* The 20 + 20 is a paranoid worst case for pid/inc */
 	len = strlen(dir) + 3 + 20 + 20 + 1;
 	tp = (struct temp *) alloc(sizeof(struct temp) + len, ap);
-	tp->name = path = (char *) &tp[1];
+	tp->name = _path = (char *) &tp[1];
 	tp->shf = (struct shf *) 0;
 	tp->type = type;
-	shf_snprintf(path, len, "%s/shXXXXXXXX", dir);
-	fd = mkstemp(path);
+	shf_snprintf(_path, len, "%s/shXXXXXXXX", dir);
+	fd = mkstemp(_path);
 	if (fd >= 0)
 		tp->shf = shf_fdopen(fd, SHF_WR, (struct shf *) 0);
 	tp->pid = procpid;

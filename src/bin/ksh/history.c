@@ -300,7 +300,7 @@ hist_execute(char *cmd)
 }
 
 static int
-hist_replace(char **hp, const char *pat, const char *rep, int global)
+hist_replace(char **hp, const char *pat, const char *rep, int _global)
 {
 	char *line;
 
@@ -316,7 +316,7 @@ hist_replace(char **hp, const char *pat, const char *rep, int global)
 		int any_subst = 0;
 
 		Xinit(xs, xp, 128, ATEMP);
-		for (s = *hp; (s1 = strstr(s, pat)) && (!any_subst || global);
+		for (s = *hp; (s1 = strstr(s, pat)) && (!any_subst || _global);
 		    s = s1 + pat_len) {
 			any_subst = 1;
 			len = s1 - s;
