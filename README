@@ -1,7 +1,111 @@
+
 MeshBSD (under construction)
 ============================
 
 Extensions on FreeBSD 11-RELEASE Operating System targeting Embedded Systems.
+
+MeshBSD ist ein Fork von FreeBSD 11-RELEASE, welcher
+ein hybrider Mix aus Komponenten des OpenBSD OS und
+FreeBSD OS darstellt.
+
+Dies sind Meta-informationen fuer
+ein Build-system, das in der Entwicklung ist. Es sind unter
+src verschiedene Modifikationen an Code-base von OS. 
+
+Eine Firmware ist schon in Arbeit: Es wird bald ein Factory-Image (rc1) fuer tl-wr1043ndv2 veroeffentlicht.
+
+#In Arbeit:
+
+Ein Build-system mit Editor. Das Build-system Integriert die Komponenten zu einem 
+Factory-image. 
+
+ksh(1) in OS. 
+
+Momentan integriere ich das rc-Script-System (bzw.
+das Run Command Sripting) von OpenBSD in User-space
+von MeshBSD, daher die ksh(1) Integration, denn die
+Syntax von
+
+--> http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man8/rc.8?query=rc
+
+steht in Abhaengigkeit von der Korn Shell, ksh(1)
+
+--> http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man1/ksh.1?query=ksh
+
+wobei die Bourne Shell (FreeBSD) eine Teilmenge von ksh(1)
+ist. Die Code-base von ksh(1) ist etwas "seltsam", aber ich
+bin geradeeben dabei diese auf die "Macken" von Clang CC
+"hinzubiegen"
+
+Mit anderen Worten: ich ersetze sh(1) durch ksh(1)!
+
+Danach werde ich den httpd aus OpenBSD
+
+--> http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man8/httpd.8?query=httpd
+
+in User-Space integrieren.
+
+#Was kann MeshBSD momentan?
+
+* dhcpd
+-> http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man8/dhcpd.8?query=dhcpd
+
+* ipsec (osi-l3-verschluesselung, trasnport -/ tunnel -mode)
+-> https://www.freebsd.org/cgi/man.cgi?query=ipsec&manpath=FreeBSD+11-current
+
+* pppoe (rfc-2516, rfc-1661)
+-> https://www.freebsd.org/cgi/man.cgi?query=ng_pppoe&manpath=FreeBSD+11-current
+-> https://www.freebsd.org/cgi/man.cgi?query=pppoed&manpath=FreeBSD+11-current
+-> https://www.freebsd.org/cgi/man.cgi?query=ppp&manpath=FreeBSD+11-current
+
+* smp-pf (Paketfilter und nat)
+-> https://www.freebsd.org/cgi/man.cgi?query=pf&manpath=FreeBSD+11-current
+-> http://www.openbsd.org/faq/pf/
+
+* usb (g3, scsi-da)
+-> https://www.freebsd.org/cgi/man.cgi?query=u3g&manpath=FreeBSD+11-current
+-> https://www.freebsd.org/cgi/man.cgi?query=da&manpath=FreeBSD+11-current
+
+* msdos-fs, ufs1 sowie ufs2
+
+Haesslich wird das web-ui werden, da cgi gegen unix-tools ueber ksh(1)
+interfaced werden wird bzw. (der Einfachheit halber, wegen kiss) soll.
+
+Die 740er und 1043er Serie funktioniert definitiv. Meiner Meinung nach
+sogar auch die Router der Archer Serie (aber ich benoetige hw zum testing).
+
+#Möglilche Probleme
+Momentan verwende ich einen tp-wr1043ndv2 als "Entwicklungsboard", wobei
+ich auch mittels qemu eine mips-emulation zum Software-testing verwende.
+
+Schwierig werden die Router 841er Serie werde, da die spi-flash devices
+etwas sich seltsam verhalten (da muss ich etwas am kernel rumhacken).
+
+#geplanter Release
+ 
+Die Code-base steht in direkter Abhaengigkeit von derjenigen in
+OpenBSD Current und FreeBSD 11-RELEASE. Release erst, wenn Final-release von FreeBSD 11 gegeben ist.
+
+MeshBSD wird ein geforktes FreeBSD 11-RELEASE sein, wobei einige
+Komponenten im Kernel- / User-space von Komponenten aus OpenBSD
+ersetzt (und integriert) werden.
+
+  * Das rc-scripting von OpenBSD wird rc-ng (FreeBSD rc-scripting)
+   ersetzen.
+   
+  * OpenBSD-dhcpd wird in User-space integriert werden.
+ 
+  * OpenBSD-httpd wird in User-space integriert werden.
+ 
+( * OpenBSD-ospfd wird in User-space integirert werden. )
+ 
+  * Die Unix-toolbox (User-space) sowie Bibliotheken werden auf 
+    die Gegebenheiten eingebetteter Systeme angepasst werden.
+
+#Was ist OpenBSD? 
+
+ -> https://www.OpenBSD.org 
+
 
 Additional information about contacting
 ---------------------------------------
@@ -39,6 +143,3 @@ u5E2GRq1FgrjmjTS8r+/zZfV31iFkIdc5gC9ipwBsA7H6Bx8lPP5M0l1MXS/wAWU
 8GZ4NRztiBU=
 =lsmx
 -----END PGP PUBLIC KEY BLOCK-----
-
-
-
